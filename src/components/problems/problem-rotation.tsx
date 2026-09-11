@@ -7,6 +7,7 @@ import { Container, Section } from "@/components/ui/section";
 import { siteCopy } from "@/content/copy";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/cn";
+import { EASE_CROSSFADE } from "@/lib/motion";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 /**
@@ -16,11 +17,18 @@ import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
  * statement is present and the others wait just above or below, so the section
  * reads as a page that keeps moving.
  *
- * Two additions carry the "this thing is processing" idea:
+ * Two details carry the "this thing is processing" idea:
  *
  * - a numbered index against the eyebrow, so the visitor always knows there is
  *   more coming and how far in they are
  * - a rule that fills across the cadence, so the next change is never a surprise
+ *
+ * It pauses only for reasons the visitor cannot ignore: the section is off
+ * screen, or the tab is in the background. It deliberately does NOT pause on
+ * hover. An earlier revision did, and it read as broken: a reader's cursor rests
+ * mid-viewport while they scroll, so the pointer sits over a section this tall
+ * almost by accident, and the rotation froze for as long as they left it there.
+ * Nothing in this section is interactive, so hover has no meaning to honour.
  *
  * Reduced motion changes only the travel: the offsets are dropped so the change
  * is a plain fade. The section still shows one statement at a time and still
@@ -29,15 +37,19 @@ import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
  * the design. A motion preference must not rewrite the information architecture.
  */
 
-const CADENCE_MS = 5000;
+/**
+ * Faster than the first pass at this. At five seconds the change arrived after
+ * most readers had finished the statement and moved on, so the section read as
+ * static rather than as something working.
+ */
+const CADENCE_MS = 3000;
 const OFFSET = 30;
-const EASE = [0.4, 0, 0.2, 1] as const;
+const EASE = EASE_CROSSFADE;
 
 export function ProblemRotation() {
   const reduced = usePrefersReducedMotion();
 
   const [index, setIndex] = useState(0);
-  const [held, setHeld] = useState(false);
   const items = siteCopy.problems.items;
   const count = items.length;
 
@@ -64,10 +76,6 @@ export function ProblemRotation() {
   }, []);
 
   useEffect(() => {
-    if (held) {
-      return;
-    }
-
     const node = document.getElementById("problems");
     let onScreen = node === null;
 
@@ -95,7 +103,7 @@ export function ProblemRotation() {
       window.clearInterval(timer);
       observer?.disconnect();
     };
-  }, [count, held]);
+  }, [count]);
 
   return (
     <Section id="problems" labelledBy="problems-label">
@@ -117,11 +125,7 @@ export function ProblemRotation() {
             tall as the longest of them and can never reflow mid rotation.
             `grid-cols-1` is load bearing: an implicit auto column would size
             itself to the widest statement and overflow the page gutter. */}
-        <div
-          className="mt-10 grid grid-cols-1 sm:mt-14"
-          onPointerEnter={() => setHeld(true)}
-          onPointerLeave={() => setHeld(false)}
-        >
+        <div className="mt-10 grid grid-cols-1 sm:mt-14">
           {items.map((item, itemIndex) => {
             const distance = (index - itemIndex + count) % count;
             const active = distance === 0;
@@ -142,15 +146,17 @@ export function ProblemRotation() {
                 transition={{
                   // Asymmetric on purpose. A symmetric crossfade puts the
                   // outgoing and incoming statements at half opacity at the same
-                  // moment, which reads as two overlapping headlines.
+                  // moment, which reads as two overlapping headlines. Timed to
+                  // finish well inside the shorter cadence: a transition that
+                  // runs most of the cycle never looks settled.
                   opacity: active
                     ? {
-                        duration: 0.45,
-                        delay: reduced ? 0 : 0.3,
+                        duration: 0.4,
+                        delay: reduced ? 0 : 0.22,
                         ease: "easeOut",
                       }
-                    : { duration: 0.25, ease: "easeIn" },
-                  y: { duration: reduced ? 0 : 0.7, ease: EASE },
+                    : { duration: 0.2, ease: "easeIn" },
+                  y: { duration: reduced ? 0 : 0.55, ease: EASE },
                 }}
               >
                 <h3 className="max-w-statement font-display text-statement font-semibold text-ink">

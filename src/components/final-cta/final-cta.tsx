@@ -21,7 +21,7 @@ export function FinalCta() {
       id={id}
     >
       <ViewEvent event="final_cta_view" target={id} />
-      <Container className="py-24 sm:py-32">
+      <Container className="py-20 sm:py-28 lg:py-36">
         <h2
           className="font-display text-statement font-semibold"
           id={`${id}-label`}

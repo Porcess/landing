@@ -172,7 +172,7 @@ export function WorkflowSection() {
           />
         </div>
 
-        <div className="mt-10 flex flex-col gap-5 sm:mt-12">
+        <div className="mt-10 flex flex-col gap-6 sm:mt-12">
           <p className="font-mono text-xs tracking-label text-ink-muted uppercase">
             {siteCopy.workflow.caption}
           </p>

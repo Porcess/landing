@@ -60,6 +60,13 @@ export function ProcessMonitor() {
     };
   }, [reduced, rows.length, visible]);
 
+  /**
+   * The row that is working. Everything else derives from it, so the counter
+   * above and the rows below can never disagree. Reduced motion parks on a fixed
+   * row instead of running a clock.
+   */
+  const runningIndex = reduced ? 1 : cursor;
+
   return (
     <div
       aria-hidden="true"
@@ -70,25 +77,18 @@ export function ProcessMonitor() {
         <span className="font-mono text-micro tracking-label text-ink-muted uppercase">
           In progress
         </span>
-        <span className="font-mono text-micro tracking-label text-ink-muted uppercase">
-          {String(cursor + 1).padStart(2, "0")} /{" "}
+        <span className="font-mono text-micro tracking-label text-ink-muted tabular-nums uppercase">
+          {String(Math.min(runningIndex + 1, rows.length)).padStart(2, "0")} /{" "}
           {String(rows.length).padStart(2, "0")}
         </span>
       </div>
 
       <ul className="flex flex-col">
         {rows.map((row, index) => {
-          // Reduced motion gets one honest snapshot rather than nothing: a
-          // finished row, the row in hand, and the ones still waiting.
-          const state = reduced
-            ? index === 0
-              ? "done"
-              : index === 1
-                ? "running"
-                : "queued"
-            : index === cursor
+          const state =
+            index === runningIndex
               ? "running"
-              : index < cursor
+              : index < runningIndex
                 ? "done"
                 : "queued";
 

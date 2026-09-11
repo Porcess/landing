@@ -22,11 +22,11 @@ export function EarlyAccessSection() {
         >
           {siteCopy.earlyAccess.headline}
         </h2>
-        <p className="mt-5 max-w-prose text-lead text-ink-muted">
+        <p className="mt-6 max-w-measure text-lead text-ink-muted">
           {siteCopy.earlyAccess.body}
         </p>
 
-        <div className="mt-8 max-w-xl sm:mt-10">
+        <div className="mt-10 max-w-xl sm:mt-12">
           <EarlyAccessForm placement="earlyAccess" />
         </div>
 

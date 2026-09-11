@@ -143,13 +143,56 @@ export function edgePath(edge: FlowEdge, nodes: Map<string, FlowNode>): string {
 /** Percentage position and size, for placing HTML nodes over the SVG layer. */
 export function nodeBoxPercent(
   node: FlowNode,
-  layout: FlowLayout,
+  frame: FlowFrame,
 ): { left: string; top: string; width: string; height: string } {
   const { w, h } = nodeSize(node);
   return {
-    left: `${((node.x - w / 2) / layout.width) * 100}%`,
-    top: `${((node.y - h / 2) / layout.height) * 100}%`,
-    width: `${(w / layout.width) * 100}%`,
-    height: `${(h / layout.height) * 100}%`,
+    left: `${((node.x - w / 2 - frame.x) / frame.width) * 100}%`,
+    top: `${((node.y - h / 2 - frame.y) / frame.height) * 100}%`,
+    width: `${(w / frame.width) * 100}%`,
+    height: `${(h / frame.height) * 100}%`,
   };
+}
+
+/** The rectangle a diagram actually occupies, in design-space units. */
+export type FlowFrame = { x: number; y: number; width: number; height: number };
+
+/**
+ * The bounding box of everything a diagram draws: every node box, plus any
+ * routing waypoints, which is what includes the return lanes that run outside
+ * the node grid.
+ *
+ * This is the frame the diagram is rendered in, and deriving it rather than
+ * using the declared design space is what aligns a diagram to the text column.
+ * A declared box is almost never the same size as its content, so rendering into
+ * it leaves a different margin on each side: the workflow diagram was inset 58px
+ * on the left and 144px on the right, against text that starts at exactly 144.
+ * The eye reads that as "misaligned" long before it can say why. With the frame
+ * derived, both insets are zero by construction, and each diagram spans the
+ * column edge to edge.
+ */
+export function contentFrame(layout: FlowLayout): FlowFrame {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  for (const node of layout.nodes) {
+    const { w, h } = nodeSize(node);
+    minX = Math.min(minX, node.x - w / 2);
+    maxX = Math.max(maxX, node.x + w / 2);
+    minY = Math.min(minY, node.y - h / 2);
+    maxY = Math.max(maxY, node.y + h / 2);
+  }
+
+  for (const edge of layout.edges) {
+    for (const point of edge.via ?? []) {
+      minX = Math.min(minX, point.x);
+      maxX = Math.max(maxX, point.x);
+      minY = Math.min(minY, point.y);
+      maxY = Math.max(maxY, point.y);
+    }
+  }
+
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }

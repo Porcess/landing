@@ -21,21 +21,21 @@ import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 const LAYOUT: FlowLayout = {
   width: 1600,
-  height: 1080,
+  height: 1000,
   nodes: [
-    { id: "ship", label: siteCopy.graph.nodes.ship, x: 800, y: 120 },
-    { id: "test", label: siteCopy.graph.nodes.test, x: 280, y: 420 },
-    { id: "market", label: siteCopy.graph.nodes.market, x: 800, y: 420 },
-    { id: "docs", label: siteCopy.graph.nodes.docs, x: 1320, y: 420 },
-    { id: "debug", label: siteCopy.graph.nodes.debug, x: 280, y: 720 },
+    { id: "ship", label: siteCopy.graph.nodes.ship, x: 800, y: 110 },
+    { id: "test", label: siteCopy.graph.nodes.test, x: 240, y: 380 },
+    { id: "market", label: siteCopy.graph.nodes.market, x: 800, y: 380 },
+    { id: "docs", label: siteCopy.graph.nodes.docs, x: 1360, y: 380 },
+    { id: "debug", label: siteCopy.graph.nodes.debug, x: 240, y: 650 },
     {
       id: "distribute",
       label: siteCopy.graph.nodes.distribute,
       x: 800,
-      y: 720,
+      y: 650,
     },
-    { id: "iterate", label: siteCopy.graph.nodes.iterate, x: 620, y: 940 },
-    { id: "build", label: siteCopy.graph.nodes.build, x: 1120, y: 940 },
+    { id: "iterate", label: siteCopy.graph.nodes.iterate, x: 470, y: 920 },
+    { id: "build", label: siteCopy.graph.nodes.build, x: 1010, y: 920 },
   ],
   edges: [
     { from: "ship", to: "test", fromSide: "bottom", toSide: "top" },
@@ -46,6 +46,20 @@ const LAYOUT: FlowLayout = {
     { from: "debug", to: "iterate", fromSide: "bottom", toSide: "left" },
     { from: "distribute", to: "iterate", fromSide: "bottom", toSide: "top" },
     { from: "iterate", to: "build", fromSide: "right", toSide: "left" },
+    // The return leg, down the right channel and back up to the top. It closes
+    // the cycle, which is the section's whole point: without it BUILD is a dead
+    // end and the diagram says "and then nothing happened", while the right third
+    // of the canvas sits empty and the left is crowded.
+    {
+      from: "build",
+      to: "ship",
+      fromSide: "right",
+      toSide: "right",
+      via: [
+        { x: 1520, y: 920 },
+        { x: 1520, y: 110 },
+      ],
+    },
   ],
 };
 
@@ -118,8 +132,18 @@ const BEATS: FlowBeat[] = [
     pulse: [["iterate", "build"]],
   },
   { hold: 900, nodes: { build: "running" } },
-  { hold: 900, nodes: { build: "done" } },
+  // The last beat closes the cycle, so the section ends on the loop rather than
+  // on a node with nothing after it.
+  {
+    hold: 900,
+    nodes: { build: "done" },
+    draw: [["build", "ship"]],
+    pulse: [["build", "ship"]],
+  },
 ];
+
+/** The return leg, kept pulsing once the cycle has closed. */
+const CLOSING_LOOP: [string, string][] = [["build", "ship"]];
 
 export function WorkGraphSection() {
   const reduced = usePrefersReducedMotion();
@@ -129,7 +153,7 @@ export function WorkGraphSection() {
   );
 
   const { states, statuses, drawnEdges, pulsingEdges } = useMemo(
-    () => deriveFlowState(BEATS, active, LAYOUT.nodes, S, BRANCH),
+    () => deriveFlowState(BEATS, active, LAYOUT.nodes, S, CLOSING_LOOP),
     [active],
   );
 
@@ -142,7 +166,7 @@ export function WorkGraphSection() {
         >
           {siteCopy.graph.headline}
         </h2>
-        <p className="mt-5 max-w-measure text-lead text-ink-muted">
+        <p className="mt-6 max-w-measure text-lead text-ink-muted">
           {siteCopy.graph.body}
         </p>
 

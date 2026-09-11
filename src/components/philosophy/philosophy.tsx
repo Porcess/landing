@@ -19,7 +19,7 @@ export function Philosophy() {
           {siteCopy.philosophy.statement}
         </h2>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-12 lg:gap-12">
+        <div className="mt-6 grid gap-6 lg:grid-cols-12 lg:gap-12">
           <p className="max-w-measure text-lead text-ink lg:col-span-5">
             {siteCopy.philosophy.support}
           </p>

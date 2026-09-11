@@ -5,8 +5,10 @@ import { motion } from "motion/react";
 import {
   edgePath,
   type FlowEdge,
+  type FlowFrame,
   type FlowLayout,
 } from "@/components/graph/geometry";
+import { EASE_ENTER, PULSE_SECONDS } from "@/lib/motion";
 
 /**
  * The SVG layer: edges only. Nodes are HTML drawn over the top, which is why
@@ -18,22 +20,24 @@ import {
  * - a pulse, a short bright dash that travels the same line, which is what makes
  *   the diagram read as work moving rather than as a picture of a diagram
  *
- * The dash is expressed through Motion's `pathLength`/`pathSpacing`/`pathOffset`
- * rather than a hand-written `strokeDasharray`, because the dash geometry has to
- * be in path-length units to stay correct when the diagram scales.
+ * The dash is expressed through Motion's `pathLength`/`pathOffset` rather than a
+ * hand-written `strokeDasharray`, because the dash geometry has to be in
+ * path-length units to stay correct when the diagram scales.
  */
 
-const DRAW_EASE = [0.16, 1, 0.3, 1] as const;
 /** One traversal of an edge. Slow enough to follow with the eye. */
-const PULSE_DURATION = 2.1;
+const PULSE_DURATION = PULSE_SECONDS;
 
 export function FlowEdges({
   layout,
+  frame,
   drawnEdges,
   pulsingEdges,
   animated,
 }: {
   layout: FlowLayout;
+  /** The derived content bounds, shared with the HTML node layer. */
+  frame: FlowFrame;
   /** Edge keys that have been reached and should be visible. */
   drawnEdges: Set<string>;
   /** Edge keys currently carrying a pulse. */
@@ -48,7 +52,7 @@ export function FlowEdges({
       aria-hidden="true"
       className="absolute inset-0 size-full overflow-visible"
       preserveAspectRatio="xMidYMid meet"
-      viewBox={`0 0 ${layout.width} ${layout.height}`}
+      viewBox={`${frame.x} ${frame.y} ${frame.width} ${frame.height}`}
     >
       <defs>
         <marker
@@ -104,7 +108,9 @@ export function FlowEdges({
               stroke={stroke}
               strokeWidth={1}
               transition={
-                animated ? { duration: 0.55, ease: DRAW_EASE } : { duration: 0 }
+                animated
+                  ? { duration: 0.55, ease: EASE_ENTER }
+                  : { duration: 0 }
               }
               vectorEffect="non-scaling-stroke"
             />

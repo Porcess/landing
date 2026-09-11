@@ -39,7 +39,10 @@ export function FlowNodeCard({
     >
       <span
         className={cn(
-          "font-mono text-xs tracking-label uppercase sm:text-sm",
+          // `leading-none` on both lines so the gap between the label and its
+          // status is the flex gap rather than an inherited line box, which is
+          // what made the two lines sit unevenly in a short card.
+          "font-mono text-xs leading-none tracking-label uppercase sm:text-sm",
           state === "running" && "text-ink",
           state === "failed" && "text-danger",
           (state === "queued" || state === "done") && "text-ink-muted",
@@ -51,7 +54,7 @@ export function FlowNodeCard({
       {statusText !== undefined ? (
         <span
           className={cn(
-            "flex items-center gap-2 font-mono text-micro tracking-label uppercase",
+            "flex items-center gap-2 font-mono text-micro leading-none tracking-label uppercase",
             state === "running" && "text-ink",
             state === "failed" && "text-danger",
             (state === "queued" || state === "done") && "text-ink-muted",

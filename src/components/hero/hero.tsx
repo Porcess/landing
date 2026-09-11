@@ -7,6 +7,7 @@ import { EarlyAccessForm } from "@/components/early-access/early-access-form";
 import { Container } from "@/components/ui/section";
 import { siteCopy } from "@/content/copy";
 import { track } from "@/lib/analytics";
+import { EASE_ENTER, EASE_SETTLE, EASE_SWEEP } from "@/lib/motion";
 
 /**
  * The signature moment: a hairline sweeps across the word and the two letters
@@ -49,14 +50,14 @@ const REVEAL_STAGGER_MS = 70;
 const SWEEP_FROM = -1.08;
 const SWEEP_TO = 0.08;
 
-const REVEAL_EASE = [0.16, 1, 0.3, 1] as const;
+const REVEAL_EASE = EASE_ENTER;
 /** Smoothstep: gentle at both ends, so the line never jerks into motion. */
-const SWEEP_EASE = [0.5, 0, 0.2, 1] as const;
+const SWEEP_EASE = EASE_SWEEP;
 /**
  * A long decelerate with no overshoot. Overshoot reads as a bounce rather than a
  * settle, which is what made the earlier pass feel abrupt.
  */
-const SWAP_EASE = [0.25, 1, 0.4, 1] as const;
+const SWAP_EASE = EASE_SETTLE;
 
 /** One seat of travel, and the small vertical drift each letter takes. */
 const TRAVEL = "88%";

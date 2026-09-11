@@ -408,19 +408,47 @@ test.describe("problem rotation", () => {
       .not.toBe(first);
   });
 
-  test("holds while the pointer is over it", async ({ page }) => {
+  test("keeps advancing while the pointer rests over it", async ({ page }) => {
     await page.goto("/");
     await page.locator("#problems").scrollIntoViewIfNeeded();
 
+    // A reader's cursor sits mid-viewport while they scroll, which puts it over
+    // a section this tall almost by accident. An earlier revision paused the
+    // rotation on hover for that reason and it froze permanently, which read as
+    // a broken carousel. It must keep moving with the pointer resting on it.
     await page.locator("#problems").hover();
-    const held = await visibleIndex(page);
-    await page.waitForTimeout(6_500);
-    expect(await visibleIndex(page)).toBe(held);
 
-    await page.mouse.move(0, 0);
+    const before = await visibleIndex(page);
     await expect
       .poll(() => visibleIndex(page), { timeout: 15_000 })
-      .not.toBe(held);
+      .not.toBe(before);
+  });
+
+  test("advances at roughly a three second cadence", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#problems").scrollIntoViewIfNeeded();
+    await page.mouse.move(5, 5);
+
+    // Time one full advance, then assert it is in the right neighbourhood. The
+    // bounds are wide on purpose: this guards against a cadence that drifted
+    // back to "too slow to notice", not against a few hundred milliseconds.
+    const started = Date.now();
+    const first = await visibleIndex(page);
+    let elapsed = 0;
+
+    while (Date.now() - started < 12_000) {
+      if ((await visibleIndex(page)) !== first) {
+        elapsed = Date.now() - started;
+        break;
+      }
+      await page.waitForTimeout(100);
+    }
+
+    expect(
+      elapsed,
+      "the statement should change within the cadence",
+    ).toBeGreaterThan(0);
+    expect(elapsed).toBeLessThan(5_000);
   });
 
   test.describe("reduced motion", () => {

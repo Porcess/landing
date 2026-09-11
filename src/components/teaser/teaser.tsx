@@ -21,7 +21,11 @@ export function Teaser() {
       className="relative border-y border-hairline bg-ground-raised"
       id="teaser"
     >
-      <Container className="py-24 sm:py-32">
+      {/* Same vertical rhythm as every other section, so the page keeps one
+          beat. This band and the closing slab previously used a slightly
+          different padding, which read as almost-but-not-quite aligned against
+          the neighbouring sections. */}
+      <Container className="py-20 sm:py-28 lg:py-36">
         {/* `grid-cols-1` and `min-w-0` are both load bearing: an implicit auto
             column sizes itself to a child's min-content width, which is how the
             monitor's longest row pushed the layout 9px past a 320px viewport. */}
@@ -33,12 +37,12 @@ export function Teaser() {
             >
               {siteCopy.teaser.headline}
             </h2>
-            <p className="mt-5 max-w-measure text-lead text-ink-muted">
+            <p className="mt-6 max-w-measure text-lead text-ink-muted">
               {siteCopy.teaser.body}
             </p>
           </div>
 
-          <div className="min-w-0 lg:col-span-6 lg:pt-2">
+          <div className="min-w-0 lg:col-span-6">
             <ProcessMonitor />
           </div>
         </div>

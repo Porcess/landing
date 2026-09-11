@@ -4,8 +4,13 @@ import { motion } from "motion/react";
 
 import { FlowEdges, edgeKey } from "@/components/graph/flow-edges";
 import { FlowNodeCard, type NodeState } from "@/components/graph/flow-node";
-import { nodeBoxPercent, type FlowLayout } from "@/components/graph/geometry";
+import {
+  contentFrame,
+  nodeBoxPercent,
+  type FlowLayout,
+} from "@/components/graph/geometry";
 import { cn } from "@/lib/cn";
+import { EASE_ENTER, PULSE_SECONDS } from "@/lib/motion";
 
 /**
  * A flow diagram, in two deliberate compositions rather than one shrunken one.
@@ -20,8 +25,8 @@ import { cn } from "@/lib/cn";
  * states, the same statuses and the same pulses down a single line.
  */
 
-const APPEAR_EASE = [0.16, 1, 0.3, 1] as const;
-const PULSE_DURATION = 2.1;
+const APPEAR_EASE = EASE_ENTER;
+const PULSE_DURATION = PULSE_SECONDS;
 
 export function FlowGraph({
   layout,
@@ -45,6 +50,10 @@ export function FlowGraph({
 }) {
   const nodes = new Map(layout.nodes.map((node) => [node.id, node]));
 
+  // The frame is derived from what the diagram actually draws, so it spans the
+  // content column exactly instead of leaving a lopsided margin.
+  const frame = contentFrame(layout);
+
   return (
     <>
       {/* Wide: the branching diagram. */}
@@ -52,11 +61,12 @@ export function FlowGraph({
         className="relative hidden w-full md:block"
         role="img"
         aria-label={label}
-        style={{ aspectRatio: `${layout.width} / ${layout.height}` }}
+        style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
       >
         <FlowEdges
           animated={animated}
           drawnEdges={drawnEdges}
+          frame={frame}
           layout={layout}
           pulsingEdges={pulsingEdges}
         />
@@ -64,7 +74,7 @@ export function FlowGraph({
         {layout.nodes.map((node) => {
           const state = states[node.id] ?? "absent";
           const present = state !== "absent";
-          const box = nodeBoxPercent(node, layout);
+          const box = nodeBoxPercent(node, frame);
 
           return (
             <motion.div
@@ -103,14 +113,10 @@ export function FlowGraph({
           const state = states[id] ?? "absent";
           const present = state !== "absent";
           const nextId = sequence[index + 1];
-          const connectorEdge =
-            nextId === undefined ? null : { from: id, to: nextId };
           const connectorDrawn =
-            connectorEdge !== null &&
-            (drawnEdges.has(`${id}->${nextId}`) ||
-              drawnEdges.has(`any->${nextId}`));
+            nextId !== undefined && drawnEdges.has(`${id}->${nextId}`);
           const connectorPulsing =
-            connectorEdge !== null && pulsingEdges.has(`${id}->${nextId}`);
+            nextId !== undefined && pulsingEdges.has(`${id}->${nextId}`);
 
           return (
             <li key={id}>
