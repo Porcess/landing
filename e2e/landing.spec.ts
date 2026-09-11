@@ -253,9 +253,13 @@ test.describe("the scan line is the thing doing the work", () => {
       ).toBeGreaterThan(sample.widthPx * 20);
     }
 
-    // It travels across the word rather than fading in place.
-    const heads = painted.map((s) => s.headPct);
-    expect(Math.max(...heads) - Math.min(...heads)).toBeGreaterThan(80);
+    // It travels across the word rather than fading in place. Measured on any
+    // frame where it is meaningfully drawn, not only the fully opaque ones: the
+    // fade at the end of the pass is part of the travel, and restricting this to
+    // peak opacity would only measure the middle of the journey.
+    const visible = samples.filter((s) => s.opacity > 0.05);
+    const heads = visible.map((s) => s.headPct);
+    expect(Math.max(...heads) - Math.min(...heads)).toBeGreaterThan(90);
 
     // It enters from before the word and leaves past it.
     expect(Math.min(...heads)).toBeLessThan(5);
@@ -267,7 +271,10 @@ test.describe("the scan line is the thing doing the work", () => {
     const firstSwap = painted.find(
       (s) => s.incomingOpacity !== null && s.incomingOpacity > 0.05,
     );
-    expect(firstSwap, "the letters should change during the crossing").toBeDefined();
+    expect(
+      firstSwap,
+      "the letters should change during the crossing",
+    ).toBeDefined();
     expect(firstSwap?.headPct ?? 999).toBeLessThan(45);
   });
 });
@@ -317,7 +324,10 @@ test.describe("reduced motion", () => {
       const tick = () => {
         const line = document.querySelector("[data-beam-line]");
         if (line !== null) {
-          maxOpacity = Math.max(maxOpacity, Number(getComputedStyle(line).opacity));
+          maxOpacity = Math.max(
+            maxOpacity,
+            Number(getComputedStyle(line).opacity),
+          );
         }
         if (performance.now() - start < 5000) {
           requestAnimationFrame(tick);
@@ -332,7 +342,10 @@ test.describe("reduced motion", () => {
     await page.waitForTimeout(300);
 
     const maxOpacity = await page.evaluate(() => window.__beamMax?.() ?? 0);
-    expect(maxOpacity, "reduced motion must still show the beam").toBeGreaterThan(0.5);
+    expect(
+      maxOpacity,
+      "reduced motion must still show the beam",
+    ).toBeGreaterThan(0.5);
   });
 });
 
@@ -438,7 +451,9 @@ test.describe("problem rotation", () => {
       expect(legible).toBe(1);
 
       // It still advances on its own, with no control to operate.
-      await expect(page.locator("#problems").getByRole("button")).toHaveCount(0);
+      await expect(page.locator("#problems").getByRole("button")).toHaveCount(
+        0,
+      );
       const first = await visibleIndex(page);
       await expect
         .poll(() => visibleIndex(page), { timeout: 15_000 })
@@ -471,25 +486,147 @@ test.describe("problem rotation", () => {
   });
 });
 
-test.describe("scroll sequence", () => {
-  test("reveals every step and the terminus", async ({ page }) => {
-    await page.goto("/");
+test.describe("the workflow diagram tells the story", () => {
+  /** Every status word currently rendered in a section. */
+  const statuses = (page: Page, id: string) =>
+    page.evaluate((sectionId) => {
+      const section = document.getElementById(sectionId);
+      if (section === null) {
+        return [];
+      }
+      return Array.from(section.querySelectorAll("span"))
+        .map((node) => node.textContent?.trim() ?? "")
+        .filter((text) => /^(QUEUED|RUNNING|DONE|FAILED)$/.test(text));
+    }, id);
 
-    for (const word of [
-      "BUILD",
+  test("runs forward, fails one step, recovers, and loops back", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator("#workflow").scrollIntoViewIfNeeded();
+
+    const seen = new Set<string>();
+    const started = Date.now();
+    let sawFailure = false;
+
+    // Watch until the failure beat has been and gone and nothing is still in
+    // flight. Note that SHIP stays FAILED forever by design: the failure is the
+    // story, and nothing claims it was fixed. So "finished" means no RUNNING and
+    // no QUEUED left, not that everything succeeded.
+    while (Date.now() - started < 30_000) {
+      const current = await statuses(page, "workflow");
+      for (const status of current) {
+        seen.add(status);
+      }
+      if (current.includes("FAILED")) {
+        sawFailure = true;
+      }
+      const inFlight = current.some(
+        (status) => status === "RUNNING" || status === "QUEUED",
+      );
+      if (sawFailure && !inFlight) {
+        break;
+      }
+      await page.waitForTimeout(400);
+    }
+
+    // Every state the story needs actually appeared.
+    expect(seen.has("QUEUED")).toBe(true);
+    expect(seen.has("RUNNING")).toBe(true);
+    expect(seen.has("FAILED"), "the failure beat must be visible").toBe(true);
+    expect(seen.has("DONE")).toBe(true);
+
+    // It settles with nothing left mid-flight, and the failure still on display.
+    const settled = await statuses(page, "workflow");
+    expect(settled.length).toBeGreaterThan(0);
+    expect(
+      settled.some((status) => status === "RUNNING" || status === "QUEUED"),
+    ).toBe(false);
+    expect(settled).toContain("FAILED");
+
+    // The verdict lands only after the flow resolves.
+    await expect(page.getByText("That\u2019s the problem.")).toBeVisible();
+    await expect(page.getByText("We\u2019re building Porcess.")).toBeVisible();
+  });
+
+  test("states every status as a word, never colour alone", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator("#workflow").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1200);
+
+    // The failure node is the one place colour carries meaning, so it must also
+    // carry the word.
+    const failed = page
+      .locator("#workflow")
+      .getByText("FAILED", { exact: true });
+    await expect(failed.first()).toBeVisible();
+  });
+
+  test.describe("reduced motion", () => {
+    test.use({ reducedMotion: "reduce" });
+
+    test("shows the fully resolved flow immediately", async ({ page }) => {
+      await page.goto("/");
+      await page.locator("#workflow").scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+
+      const current = await statuses(page, "workflow");
+      expect(current.length).toBeGreaterThan(0);
+      // Everything is already resolved: no half-finished story.
+      expect(
+        current.every((status) => status === "DONE" || status === "FAILED"),
+      ).toBe(true);
+      await expect(page.getByText("That\u2019s the problem.")).toBeVisible();
+    });
+  });
+});
+
+test.describe("the work graph branches", () => {
+  test("one task becomes many, and they all converge", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#graph").scrollIntoViewIfNeeded();
+
+    // The section renders, and its node labels are not headings: the diagram is
+    // one image with an accessible name, so it does not pollute the outline.
+    await expect(
+      page.getByRole("heading", { name: "Nothing happens in isolation." }),
+    ).toBeVisible();
+    await expect(page.locator("#graph h3")).toHaveCount(0);
+
+    const seen = await page.evaluate(async () => {
+      const section = document.getElementById("graph");
+      if (section === null) return [];
+      const found = new Set<string>();
+      const started = Date.now();
+      while (Date.now() - started < 25_000) {
+        for (const node of section.querySelectorAll("span")) {
+          const text = node.textContent?.trim() ?? "";
+          if (
+            /^(SHIP|TEST|MARKET|DOCS|DEBUG|DISTRIBUTE|ITERATE|BUILD)$/.test(
+              text,
+            )
+          ) {
+            found.add(text);
+          }
+        }
+        if (found.size >= 8) break;
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+      return [...found];
+    });
+
+    // The branch and the return leg both appear.
+    for (const label of [
       "SHIP",
       "TEST",
       "MARKET",
-      "DISTRIBUTE",
+      "DOCS",
       "ITERATE",
-      "REPEAT",
+      "BUILD",
     ]) {
-      const item = page.locator(`#work span:text-is("${word}")`).first();
-      await item.scrollIntoViewIfNeeded();
-      await expect(item).toHaveCSS("opacity", "1");
+      expect(seen, `${label} should appear`).toContain(label);
     }
-
-    await expect(page.getByText("MORE WORK")).toBeVisible();
-    await page.screenshot({ path: `${SHOTS}/sequence.png` });
   });
 });

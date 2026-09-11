@@ -45,7 +45,9 @@ export function EarlyAccessSection() {
                   <span
                     className={cn(
                       "font-mono text-xs tracking-label",
-                      benefit.emphasized ? "text-ink" : "text-ink-muted",
+                      benefit.scale === "normal"
+                        ? "text-ink-muted"
+                        : "text-ink",
                     )}
                   >
                     {benefit.number}
@@ -53,13 +55,15 @@ export function EarlyAccessSection() {
                   <span
                     className={cn(
                       "mt-1 block font-display font-semibold text-ink sm:mt-0",
-                      benefit.emphasized ? "text-2xl sm:text-3xl" : "text-lg",
+                      benefit.scale === "primary" && "text-2xl sm:text-3xl",
+                      benefit.scale === "secondary" && "text-xl sm:text-2xl",
+                      benefit.scale === "normal" && "text-lg",
                     )}
                   >
                     {benefit.title}
                   </span>
                 </dt>
-                <dd className="max-w-prose text-sm text-ink-muted sm:col-span-6 sm:col-start-7">
+                <dd className="max-w-measure text-sm text-ink-muted sm:col-span-6 sm:col-start-7">
                   {benefit.body}
                 </dd>
               </div>

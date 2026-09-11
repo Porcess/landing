@@ -1,72 +1,47 @@
 import { Container } from "@/components/ui/section";
 import { siteCopy } from "@/content/copy";
 
+import { ProcessMonitor } from "./process-monitor";
+
 /**
- * A deliberately non-representational composition.
+ * The curtain.
  *
- * This is the closest the page comes to showing the product, and it shows
- * nothing: no words, no interface chrome, no terminal, no controls. Just soft
- * light, hairline rules at unreadable widths and a few drifting bars. It is not
- * a mock of anything, so it cannot misrepresent anything.
+ * Replaces the earlier "we are not ready yet" apology, which read as a product
+ * that is unfinished rather than one that is close. The monitor beside it makes
+ * the section do something: work is visibly moving, and none of it is explained.
  *
- * The decorative layer is hidden from assistive technology, cannot receive
- * pointer events, and is contained exactly within the section box. Nothing here
- * bleeds outside its own bounds on purpose: a decorative element overlapping
- * neighbouring text makes contrast impossible to verify mechanically, and a
- * teaser is not worth an unverifiable page.
- *
- * The loops only run when reduced motion is not requested.
+ * There are no product words anywhere in this section. The monitor's stages are
+ * generic on purpose, so the section can never be mistaken for a screenshot or a
+ * claim about a feature.
  */
-
-const RULE_WIDTHS = [62, 38, 74, 52, 30, 44];
-const BAR_DELAYS = [0, 4.5, 9, 12.5];
-
 export function Teaser() {
   return (
     <section
       aria-labelledby="teaser-label"
-      className="relative isolate overflow-hidden border-y border-hairline bg-ground-raised"
+      className="relative border-y border-hairline bg-ground-raised"
       id="teaser"
     >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="teaser-light-a absolute inset-0" />
-        <div className="teaser-light-b absolute inset-0" />
-
-        <div className="absolute inset-x-6 top-12 -bottom-12 -rotate-1 overflow-hidden border border-hairline bg-ground/50 sm:inset-x-16">
-          <div className="flex flex-col gap-6 p-8 sm:p-12">
-            {RULE_WIDTHS.map((width) => (
-              <span
-                className="block h-px bg-ink/10"
-                key={width}
-                style={{ width: `${width}%` }}
-              />
-            ))}
+      <Container className="py-24 sm:py-32">
+        {/* `grid-cols-1` and `min-w-0` are both load bearing: an implicit auto
+            column sizes itself to a child's min-content width, which is how the
+            monitor's longest row pushed the layout 9px past a 320px viewport. */}
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="min-w-0 lg:col-span-6">
+            <h2
+              className="max-w-statement font-display text-statement font-semibold text-balance text-ink"
+              id="teaser-label"
+            >
+              {siteCopy.teaser.headline}
+            </h2>
+            <p className="mt-5 max-w-measure text-lead text-ink-muted">
+              {siteCopy.teaser.body}
+            </p>
           </div>
 
-          <div className="absolute inset-x-8 bottom-16 flex flex-col gap-4 sm:inset-x-12">
-            {BAR_DELAYS.map((delay) => (
-              <span
-                className="teaser-bar block h-0.5 w-1/2 bg-ink/20"
-                key={delay}
-                style={{ animationDelay: `-${delay}s` }}
-              />
-            ))}
+          <div className="min-w-0 lg:col-span-6 lg:pt-2">
+            <ProcessMonitor />
           </div>
         </div>
-
-        <div className="teaser-veil absolute inset-0" />
-      </div>
-
-      <Container className="relative py-32 sm:py-44">
-        <h2
-          className="max-w-statement font-display text-statement font-semibold text-balance text-ink"
-          id="teaser-label"
-        >
-          {siteCopy.teaser.headline}
-        </h2>
-        <p className="mt-5 max-w-prose text-lead text-ink-muted">
-          {siteCopy.teaser.body}
-        </p>
       </Container>
     </section>
   );

@@ -93,10 +93,12 @@ test("confirms a new signup and states the free month", async ({ page }) => {
   await expect(form.getByText("You\u2019re in.")).toBeVisible();
   await expect(form.getByText("Welcome to Porcess.")).toBeVisible();
   await expect(
-    form.getByText("Your first month will be free when Porcess launches."),
+    form.getByText(
+      "You\u2019re on the list for 90% off your first 3 months when Porcess launches.",
+    ),
   ).toBeVisible();
   await expect(
-    form.getByText("We\u2019ll let you know when it\u2019s time."),
+    form.getByText("You\u2019re also in the draw for 3 months free."),
   ).toBeVisible();
 
   // The confirmation must not shove the page around.

@@ -11,11 +11,16 @@ import { cn } from "@/lib/cn";
 import { SECTION } from "@/lib/site";
 
 /**
- * Two items, one line, no menu.
+ * Two items plus the offer, one line, no menu.
+ *
+ * The offer appears in the bar only once the visitor has scrolled past the hero,
+ * so the opening viewport stays quiet and the offer is still present on every
+ * screen below it. Below `sm` it stays out of the way entirely: the hero note,
+ * the marquee and two sections already carry it, and crowding this bar is how a
+ * clean nav starts looking like an ad.
  *
  * The scrolled state is driven by Motion's scroll value rather than a raw
- * `scroll` listener, and only the boolean crossing re-renders. The wordmark
- * stays a link to the top so the page never becomes a dead end.
+ * `scroll` listener, and only the boolean crossing re-renders.
  */
 export function SiteNav() {
   const { scrollY } = useScroll();
@@ -35,7 +40,7 @@ export function SiteNav() {
           : "border-transparent",
       )}
     >
-      <Container className="flex h-14 items-center justify-between sm:h-16">
+      <Container className="flex h-14 items-center justify-between gap-6 sm:h-16">
         <Link
           className="focus-ring font-display text-sm font-semibold tracking-eyebrow text-ink uppercase"
           href="/"
@@ -43,13 +48,25 @@ export function SiteNav() {
           {siteCopy.brand.toUpperCase()}
         </Link>
 
-        <a
-          className="focus-ring font-mono text-xs tracking-label text-ink-muted uppercase transition-colors duration-150 hover:text-ink"
-          href={`#${SECTION.earlyAccess}`}
-          onClick={() => track("early_access_cta_clicked", { source: "nav" })}
-        >
-          {siteCopy.nav.cta}
-        </a>
+        <div className="flex items-center gap-6">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "hidden font-mono text-micro tracking-label text-ink-muted uppercase transition-opacity duration-300 sm:block",
+              scrolled ? "opacity-100" : "opacity-0",
+            )}
+          >
+            {siteCopy.offer.short}
+          </span>
+
+          <a
+            className="focus-ring font-mono text-xs tracking-label text-ink-muted uppercase transition-colors duration-150 hover:text-ink"
+            href={`#${SECTION.earlyAccess}`}
+            onClick={() => track("early_access_cta_clicked", { source: "nav" })}
+          >
+            {siteCopy.nav.cta}
+          </a>
+        </div>
       </Container>
     </header>
   );

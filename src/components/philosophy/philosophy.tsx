@@ -2,28 +2,30 @@ import { Container, Section } from "@/components/ui/section";
 import { siteCopy } from "@/content/copy";
 
 /**
- * One statement, set in an off-centre column so the page keeps its asymmetry.
- * No image, no card, no list: the type is the whole section.
+ * One statement, then its support beside it rather than stacked under it.
+ *
+ * The earlier version was a single narrow column with a lot of air around it.
+ * Two columns at the wide breakpoint keeps the asymmetry and removes the dead
+ * space, without turning the section into a feature list.
  */
 export function Philosophy() {
   return (
     <Section id="philosophy" labelledBy="philosophy-label">
       <Container>
-        <div className="lg:grid lg:grid-cols-12">
-          <div className="lg:col-span-8 lg:col-start-4">
-            <h2
-              className="max-w-statement font-display text-statement font-semibold text-balance text-ink"
-              id="philosophy-label"
-            >
-              {siteCopy.philosophy.statement}
-            </h2>
-            <p className="mt-6 max-w-measure text-lead text-ink-muted">
-              {siteCopy.philosophy.support}
-            </p>
-            <p className="mt-8 max-w-measure text-base text-ink-muted">
-              {siteCopy.philosophy.body}
-            </p>
-          </div>
+        <h2
+          className="max-w-statement font-display text-statement font-semibold text-balance text-ink"
+          id="philosophy-label"
+        >
+          {siteCopy.philosophy.statement}
+        </h2>
+
+        <div className="mt-10 grid gap-6 lg:grid-cols-12 lg:gap-12">
+          <p className="max-w-measure text-lead text-ink lg:col-span-5">
+            {siteCopy.philosophy.support}
+          </p>
+          <p className="max-w-measure text-base text-ink-muted lg:col-span-6 lg:col-start-7">
+            {siteCopy.philosophy.body}
+          </p>
         </div>
       </Container>
     </Section>

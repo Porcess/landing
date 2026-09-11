@@ -22,6 +22,8 @@ export type AnalyticsEventName =
    */
   | "email_verified"
   | "problem_section_view"
+  | "workflow_section_view"
+  | "graph_section_view"
   | "final_cta_view";
 
 export type AnalyticsProperties = Record<

@@ -59,6 +59,11 @@
   --text-lead: clamp(1.0625rem, 2.1vw, 1.375rem);
   --text-lead--line-height: 1.45;
 
+  /* Dense metadata: status chips and diagram captions, where the display steps
+     are far too large and the default scale has nothing below 12px. */
+  --text-micro: 0.625rem;
+  --text-micro--line-height: 1rem;
+
   /* Tracking. Wide tracking is reserved for the wordmark and micro labels. */
   --tracking-label: 0.16em;
   --tracking-eyebrow: 0.26em;
@@ -187,59 +192,44 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   Teaser panel
-   ---------------------------------------------------------------------------
-
-   A deliberately non-representational composition. It is not a product mock,
-   not a terminal and not a screenshot: there is no text and no interface
-   chrome, only hairlines, soft light and a few drifting bars.
+   Diagram status
    --------------------------------------------------------------------------- */
-@keyframes teaser-drift {
+
+/* A node that is working gets a slow breath on its marker, so a still diagram
+   never looks frozen. Opacity only, and gated behind a motion preference. */
+@keyframes node-pulse {
   0%,
   100% {
-    transform: scaleX(0.3);
-    opacity: 0.3;
+    opacity: 1;
   }
   50% {
-    transform: scaleX(1);
-    opacity: 0.8;
+    opacity: 0.25;
   }
-}
-
-.teaser-bar {
-  transform-origin: left center;
-}
-
-.teaser-light-a {
-  background-image: radial-gradient(
-    closest-side at 22% 8%,
-    color-mix(in oklab, var(--color-ink) 7%, transparent),
-    transparent
-  );
-}
-
-.teaser-light-b {
-  background-image: radial-gradient(
-    closest-side at 88% 96%,
-    color-mix(in oklab, var(--color-ink) 5%, transparent),
-    transparent
-  );
-}
-
-/* Dissolves the composition into the page instead of ending on a hard edge. */
-.teaser-veil {
-  background-image: linear-gradient(
-    180deg,
-    var(--color-ground) 0%,
-    transparent 42%,
-    transparent 62%,
-    var(--color-ground) 100%
-  );
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .teaser-bar {
-    animation: teaser-drift 15s ease-in-out infinite;
+  .node-running-marker {
+    animation: node-pulse 1.6s ease-in-out infinite;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Offer marquee
+   ---------------------------------------------------------------------------
+   Text only, and gated behind a motion preference: the strip reads exactly the
+   same sitting still, it just stops travelling. */
+@keyframes offer-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .offer-marquee {
+    animation: offer-marquee 44s linear infinite;
   }
 }
 
