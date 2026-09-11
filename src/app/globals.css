@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Porcess design tokens.
+
+   Monochrome by design. There is no accent hue anywhere on this page: depth
+   comes from surface steps, hairlines and type scale. The one exception is
+   `--color-danger`, which exists because errors must be distinguishable from
+   ordinary copy.
+
+   Shape is a two step system: 2px for interactive controls, 0 for surfaces.
+   No third radius is allowed.
+   --------------------------------------------------------------------------- */
+@theme {
+  /* Surfaces: page, raised panel, and the single inverted closing slab. */
+  --color-ground: #0c0c0b;
+  --color-ground-raised: #141413;
+  --color-slab: #f4f4f2;
+
+  /* Ink. Two text steps only: `ink-muted` clears 4.5:1 on every surface it is
+     used on, and anything lighter is a hairline rather than text. */
+  --color-ink: #f4f4f2;
+  --color-ink-muted: #9a9a97;
+  --color-slab-ink: #0c0c0b;
+  --color-slab-ink-muted: #5c5c5a;
+
+  --color-danger: #ff6b57;
+  /* The same role on the light closing slab, where #ff6b57 would only reach
+     2.5:1. Errors are the one thing that must survive the inversion. */
+  --color-danger-on-light: #a32318;
+
+  --color-hairline: #2a2a28;
+  --color-hairline-strong: #3d3d3a;
+
+  /* Type. `--font-display` is deliberately its own token so the display face
+     can be swapped in one place without touching a component. */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Fluid display steps. Every size on the page comes from a named step. */
+  --text-eyebrow: clamp(0.75rem, 2.4vw, 0.9375rem);
+  --text-eyebrow--line-height: 1;
+  --text-eyebrow--letter-spacing: 0.26em;
+
+  --text-display: clamp(3.25rem, 17vw, 13rem);
+  --text-display--line-height: 0.85;
+  --text-display--letter-spacing: -0.05em;
+
+  --text-sequence: clamp(2.25rem, 11vw, 10.5rem);
+  --text-sequence--line-height: 0.9;
+  --text-sequence--letter-spacing: -0.04em;
+
+  --text-statement: clamp(2.125rem, 7.2vw, 4.75rem);
+  --text-statement--line-height: 0.98;
+  --text-statement--letter-spacing: -0.035em;
+
+  --text-lead: clamp(1.0625rem, 2.1vw, 1.375rem);
+  --text-lead--line-height: 1.45;
+
+  /* Tracking. Wide tracking is reserved for the wordmark and micro labels. */
+  --tracking-label: 0.16em;
+  --tracking-eyebrow: 0.26em;
+
+  /* The single page measure. */
+  --container-page: 78rem;
+
+  /* Text measures. `ch` resolves against the font size of the element it is
+     applied to, which is why these live on the text itself and never on a
+     wrapper: a 65-character measure computed at 16px, applied to a wrapper
+     holding 76px display type, wraps that headline at a fifth of the width it
+     should have. */
+  --container-measure: 60ch;
+  --container-statement: 22ch;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  border-color: var(--color-hairline);
+}
+
+html {
+  /* Anchor jumps from the nav must clear the sticky header. Smooth scrolling is
+     opt-in so reduced motion users get an instant jump. */
+  scroll-padding-top: 5rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: var(--color-ink);
+  color: var(--color-ground);
+}
+
+/* ---------------------------------------------------------------------------
+   Utilities
+   --------------------------------------------------------------------------- */
+
+/* One focus treatment for the whole page, inverted on the closing slab. */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 3px;
+  }
+}
+
+@utility focus-ring-inverse {
+  &:focus-visible {
+    outline: 2px solid var(--color-ground);
+    outline-offset: 3px;
+  }
+}
+
+@utility skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 0.75rem;
+  left: 0.75rem;
+  border-radius: 2px;
+  background-color: var(--color-ink);
+  color: var(--color-ground);
+  padding: 0.625rem 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: translateY(-200%);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 3px;
+    transform: translateY(0);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Hero
+   --------------------------------------------------------------------------- */
+
+/* The scan line: a vertical rule that travels across the word, with its ends
+   faded so it reads as a line rather than a bar.
+
+   Drawn with difference blending on purpose. A plain white line disappears the
+   moment it meets a white stroke, which defeats the entire idea of a line that
+   passes over the letters and changes them: it would only ever be visible in the
+   gaps between glyphs. Inverting whatever is behind it keeps one continuous line
+   across the whole word, appearing near-white over the ground and near-black over
+   a glyph. No glow, no colour, just the inversion. */
+.hero-scan {
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--color-ink) 15%,
+    var(--color-ink) 85%,
+    transparent 100%
+  );
+  mix-blend-mode: difference;
+}
+
+/* A faint wash trailing the line, so the pass has a direction instead of looking
+   like a bare cursor crossing the page. */
+.hero-scan-tail {
+  background-image: linear-gradient(
+    to left,
+    color-mix(in oklab, var(--color-ink) 9%, transparent),
+    transparent
+  );
+  mix-blend-mode: difference;
+}
+
+/* ---------------------------------------------------------------------------
+   Teaser panel
+   ---------------------------------------------------------------------------
+
+   A deliberately non-representational composition. It is not a product mock,
+   not a terminal and not a screenshot: there is no text and no interface
+   chrome, only hairlines, soft light and a few drifting bars.
+   --------------------------------------------------------------------------- */
+@keyframes teaser-drift {
+  0%,
+  100% {
+    transform: scaleX(0.3);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+}
+
+.teaser-bar {
+  transform-origin: left center;
+}
+
+.teaser-light-a {
+  background-image: radial-gradient(
+    closest-side at 22% 8%,
+    color-mix(in oklab, var(--color-ink) 7%, transparent),
+    transparent
+  );
+}
+
+.teaser-light-b {
+  background-image: radial-gradient(
+    closest-side at 88% 96%,
+    color-mix(in oklab, var(--color-ink) 5%, transparent),
+    transparent
+  );
+}
+
+/* Dissolves the composition into the page instead of ending on a hard edge. */
+.teaser-veil {
+  background-image: linear-gradient(
+    180deg,
+    var(--color-ground) 0%,
+    transparent 42%,
+    transparent 62%,
+    var(--color-ground) 100%
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .teaser-bar {
+    animation: teaser-drift 15s ease-in-out infinite;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reveal safety net.
+
+   Anything that is server rendered hidden and then revealed by script must be
+   readable when there is no animation to wait for. This covers both the hero
+   copy and every scroll reveal on the page.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

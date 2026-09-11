@@ -1,0 +1,4 @@
+# This file exists so pnpm roots the project here and never walks up into the
+# parent repository's workspace. Do not add other packages.
+packages:
+  - "."
