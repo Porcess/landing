@@ -191,7 +191,7 @@ export const siteCopy = {
       headline: "You\u2019re in.",
       welcome: "Welcome to Porcess.",
       month: "You\u2019re on the list for 90% off when Porcess launches.",
-      duplicate: "You were already on the list.",
+      duplicate: "You were meant to be on the list.",
     },
   },
 

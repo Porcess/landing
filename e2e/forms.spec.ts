@@ -119,9 +119,7 @@ test("confirms a new signup and states the discount", async ({ page }) => {
   expect(focused).toContain("You\u2019re in");
 });
 
-test("tells a returning visitor they were already on the list", async ({
-  page,
-}) => {
+test("confirms a returning visitor without asking again", async ({ page }) => {
   await page.route("**/early-access", (route) =>
     json(route, 200, { status: "already_subscribed" }),
   );
@@ -131,7 +129,9 @@ test("tells a returning visitor they were already on the list", async ({
   await form.getByRole("button").click();
 
   await expect(form.getByText("You\u2019re in.")).toBeVisible();
-  await expect(form.getByText("You were already on the list.")).toBeVisible();
+  await expect(
+    form.getByText("You were meant to be on the list."),
+  ).toBeVisible();
 });
 
 test("offers a retry when the server fails", async ({ page }) => {

@@ -130,7 +130,7 @@ describe("EarlyAccessForm", () => {
     });
   });
 
-  it("tells a returning visitor they were already on the list", async () => {
+  it("confirms a returning visitor without asking again", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => respond(200, { status: "already_subscribed" })),
