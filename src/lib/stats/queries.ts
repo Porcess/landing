@@ -392,6 +392,12 @@ export async function recentEvents(limit: number): Promise<RecentEvent[]> {
 export type Health = {
   database: string;
   configured: boolean;
+  /** Configured and answering. A configured database that is not reachable is
+   * still broken, and saying which of the two it is is the difference between
+   * a one line fix and a hunt. */
+  reachable: boolean;
+  /** Why it could not be read, when it could not be. */
+  problem: string | null;
   lastEventAt: Date | null;
   lastSignupAt: Date | null;
   eventsLast24h: number;
@@ -407,6 +413,8 @@ export async function health(): Promise<Health> {
     return {
       database: targetDatabase(),
       configured: false,
+      reachable: false,
+      problem: null,
       lastEventAt: null,
       lastSignupAt: null,
       eventsLast24h: 0,
@@ -431,16 +439,23 @@ export async function health(): Promise<Health> {
     return {
       database: targetDatabase(),
       configured: true,
+      reachable: true,
+      problem: null,
       lastEventAt: row?.lastEventAt ?? null,
       lastSignupAt: row?.lastSignupAt ?? null,
       eventsLast24h: row?.eventsLast24h ?? 0,
     };
-  } catch {
-    // Either the database is unreachable or the tables are not there yet. Both
-    // are reported as a dashboard that says so, never as a page that fails.
+  } catch (error) {
+    // Configured but unreadable: the connection was refused, or the tables are
+    // not there yet because the migration never ran. Reported as its own state
+    // rather than as "not configured", because telling someone to set a
+    // variable they already set sends them looking in the wrong place.
     return {
       database: targetDatabase(),
-      configured: false,
+      configured: true,
+      reachable: false,
+      problem:
+        error instanceof Error ? error.message.slice(0, 300) : "unknown error",
       lastEventAt: null,
       lastSignupAt: null,
       eventsLast24h: 0,

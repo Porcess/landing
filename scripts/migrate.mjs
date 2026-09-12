@@ -5,7 +5,9 @@ import { readFile } from "node:fs/promises";
 
 import pg from "pg";
 
-const connectionString = process.env.DATABASE_URL;
+import { envValue } from "./env.mjs";
+
+const connectionString = await envValue("DATABASE_URL");
 
 if (connectionString === undefined || connectionString.length === 0) {
   console.error(

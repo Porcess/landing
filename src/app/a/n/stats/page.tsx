@@ -173,6 +173,22 @@ export default async function StatsPage({
             recorded yet. Set <code className="text-ink">DATABASE_URL</code> and
             run <code className="text-ink">pnpm db:migrate</code>.
           </p>
+        ) : !status.reachable ? (
+          <p
+            className="mt-10 border-t border-hairline-strong pt-6 text-sm text-danger"
+            data-stats-empty
+          >
+            <code className="text-ink">DATABASE_URL</code> points at{" "}
+            <code className="text-ink">{status.database}</code>, but nothing
+            could be read from it. The tables are most likely missing: run{" "}
+            <code className="text-ink">pnpm db:migrate</code> against that
+            database.
+            {status.problem === null ? null : (
+              <span className="mt-2 block font-mono text-xs text-ink-muted">
+                {status.problem}
+              </span>
+            )}
+          </p>
         ) : summary === null ? (
           <p
             className="mt-10 border-t border-hairline-strong pt-6 text-sm text-danger"
@@ -298,8 +314,14 @@ function Health({ status, now }: { status: HealthState; now: Date }) {
     >
       <Fact
         label="Database"
-        tone={status.configured ? "ok" : "bad"}
-        value={status.configured ? status.database : "not configured"}
+        tone={status.reachable ? "ok" : "bad"}
+        value={
+          status.reachable
+            ? status.database
+            : status.configured
+              ? `${status.database}, unreadable`
+              : "not configured"
+        }
       />
       <Fact
         label="Last event"

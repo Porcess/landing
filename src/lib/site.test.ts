@@ -27,9 +27,7 @@ describe("SITE_URL", () => {
 
   it("falls back on whitespace or an unparsable value", async () => {
     await expect(siteUrlWith("   ")).resolves.toBe("https://porcess.com");
-    await expect(siteUrlWith("not a url")).resolves.toBe(
-      "https://porcess.com",
-    );
+    await expect(siteUrlWith("not a url")).resolves.toBe("https://porcess.com");
   });
 
   it("keeps a valid URL and strips trailing slashes", async () => {

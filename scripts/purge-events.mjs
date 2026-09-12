@@ -7,9 +7,13 @@
 
 import pg from "pg";
 
-const RETENTION_DAYS = Number(process.env.STATS_RETENTION_DAYS ?? "365");
+import { envValue } from "./env.mjs";
 
-const connectionString = process.env.DATABASE_URL;
+const RETENTION_DAYS = Number(
+  (await envValue("STATS_RETENTION_DAYS")) ?? "365",
+);
+
+const connectionString = await envValue("DATABASE_URL");
 
 if (connectionString === undefined || connectionString.length === 0) {
   console.error(
