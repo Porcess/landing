@@ -8,6 +8,8 @@
  * storage must never break the page.
  */
 
+import { clampField } from "@/lib/validation";
+
 export type Attribution = {
   referrer: string | null;
   utmSource: string | null;
@@ -138,4 +140,26 @@ export function getAttribution(): Attribution {
     readStore() ??
     readAttribution(window.location.search, document.referrer ?? "")
   );
+}
+
+/**
+ * Bounds attribution arriving from a client before it reaches a row. Shared by
+ * both write endpoints so a hostile payload is clamped the same way whichever
+ * one it arrives at.
+ */
+export function parseAttribution(input: unknown): Attribution {
+  if (typeof input !== "object" || input === null) {
+    return EMPTY_ATTRIBUTION;
+  }
+
+  const record = input as Record<string, unknown>;
+
+  return {
+    referrer: clampField(record.referrer),
+    utmSource: clampField(record.utmSource, 256),
+    utmMedium: clampField(record.utmMedium, 256),
+    utmCampaign: clampField(record.utmCampaign, 256),
+    utmContent: clampField(record.utmContent, 256),
+    utmTerm: clampField(record.utmTerm, 256),
+  };
 }

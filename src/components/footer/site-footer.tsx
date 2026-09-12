@@ -1,3 +1,4 @@
+import { TrackedAnchor } from "@/components/analytics/tracked-anchor";
 import { Container } from "@/components/ui/section";
 import { siteCopy } from "@/content/copy";
 import { SECTION } from "@/lib/site";
@@ -15,12 +16,14 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-col gap-3 sm:items-end">
-          <a
+          <TrackedAnchor
             className="focus-ring w-fit font-mono text-xs tracking-label text-ink-muted uppercase transition-colors duration-150 hover:text-ink"
+            event="early_access_cta_clicked"
             href={`#${SECTION.earlyAccess}`}
+            properties={{ source: "footer" }}
           >
             {siteCopy.footer.cta}
-          </a>
+          </TrackedAnchor>
           <p className="font-mono text-xs text-ink-muted">
             {siteCopy.footer.copyright}
           </p>

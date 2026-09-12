@@ -18,6 +18,7 @@
     "test": "vitest run",
     "test:e2e": "pnpm build && playwright test",
     "db:migrate": "node scripts/migrate.mjs",
+    "stats:purge": "node scripts/purge-events.mjs",
     "og:build": "node scripts/build-og.mjs",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },

@@ -1,3 +1,4 @@
+import { ViewEvent } from "@/components/analytics/view-event";
 import { Container, Section } from "@/components/ui/section";
 import { siteCopy } from "@/content/copy";
 
@@ -11,6 +12,7 @@ import { siteCopy } from "@/content/copy";
 export function Philosophy() {
   return (
     <Section id="philosophy" labelledBy="philosophy-label">
+      <ViewEvent event="philosophy_section_view" target="philosophy" />
       <Container>
         <h2
           className="max-w-statement font-display text-statement font-semibold text-balance text-ink"

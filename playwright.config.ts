@@ -31,7 +31,15 @@ export default defineConfig({
     timeout: 120_000,
     // The suite must never write to a real database: forcing the connection
     // string empty keeps the signup path on its fail-closed branch, which is
-    // what "the real endpoint fails closed without a database" asserts.
-    env: { ...process.env, DATABASE_URL: "" },
+    // what "the real endpoint fails closed without a database" asserts. It also
+    // means the stats dashboard has to render its unconfigured state, which is
+    // the state a fresh deployment is actually in.
+    env: {
+      ...process.env,
+      DATABASE_URL: "",
+      // The dashboard has to be reachable for its own tests, and the value has
+      // to be knowable by them, so the server and the specs share one default.
+      STATS_PASSWORD: process.env.STATS_PASSWORD ?? "test-password",
+    },
   },
 });

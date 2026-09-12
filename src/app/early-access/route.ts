@@ -1,21 +1,23 @@
 import { after } from "next/server";
 
 import type { Attribution } from "@/lib/attribution";
+import { parseAttribution } from "@/lib/attribution";
 import {
   insertSignup,
   targetDatabase,
   type SignupResult,
 } from "@/lib/early-access/store";
+import { isSameOrigin } from "@/lib/request";
 import { LANDING_VERSION } from "@/lib/site";
-import { clampField, checkEmail } from "@/lib/validation";
+import { checkEmail } from "@/lib/validation";
 
 /**
  * POST /early-access
  *
- * The only server capability this site has. It validates an address, stores it
- * once, and optionally forwards it to a configured list provider after the
- * response has been sent. Nothing else is collected, and no email address is
- * ever written to a log line.
+ * The signup capability this site has. It validates an address, stores it once,
+ * and optionally forwards it to a configured list provider after the response
+ * has been sent. Nothing else is collected, and no email address is ever written
+ * to a log line.
  */
 
 export const runtime = "nodejs";
@@ -24,15 +26,6 @@ const MAX_BODY_BYTES = 4096;
 
 /** Warned once per process, so a misconfigured deploy is loud but not spammy. */
 let warnedUnconfigured = false;
-
-const EMPTY_ATTRIBUTION: Attribution = {
-  referrer: null,
-  utmSource: null,
-  utmMedium: null,
-  utmCampaign: null,
-  utmTerm: null,
-  utmContent: null,
-};
 
 type Status =
   | "subscribed"
@@ -50,64 +43,6 @@ function respond(status: Status, httpStatus: number, extra?: object): Response {
       status: httpStatus,
       headers: { "Cache-Control": "no-store" },
     },
-  );
-}
-
-function parseAttribution(input: unknown): Attribution {
-  if (typeof input !== "object" || input === null) {
-    return EMPTY_ATTRIBUTION;
-  }
-
-  const record = input as Record<string, unknown>;
-
-  return {
-    referrer: clampField(record.referrer),
-    utmSource: clampField(record.utmSource, 256),
-    utmMedium: clampField(record.utmMedium, 256),
-    utmCampaign: clampField(record.utmCampaign, 256),
-    utmContent: clampField(record.utmContent, 256),
-    utmTerm: clampField(record.utmTerm, 256),
-  };
-}
-
-/**
- * A form post from this site never carries a foreign origin, so a present
- * origin that disagrees with the request host is rejected.
- */
-function isSameOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  if (origin === null) {
-    return true;
-  }
-
-  try {
-    const originUrl = new URL(origin);
-    const requestUrl = new URL(request.url);
-    if (originUrl.host === requestUrl.host) {
-      return true;
-    }
-    // The production server can canonicalize its own hostname (notably
-    // `localhost` when the page was reached over `127.0.0.1`), so loopback
-    // forms of the same machine and port compare as the same origin rather
-    // than as a forgery.
-    return (
-      originUrl.protocol === requestUrl.protocol &&
-      originUrl.port === requestUrl.port &&
-      isLoopback(originUrl.hostname) &&
-      isLoopback(requestUrl.hostname)
-    );
-  } catch {
-    return false;
-  }
-}
-
-/** Hostnames that always mean this machine. */
-function isLoopback(hostname: string): boolean {
-  return (
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "::1" ||
-    hostname === "[::1]"
   );
 }
 

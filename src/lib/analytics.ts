@@ -1,64 +1,55 @@
 /**
- * Analytics abstraction.
+ * The browser's side of analytics.
  *
- * No provider is wired in by default and no third-party script is loaded, so an
- * unconfigured deployment records nothing at all rather than shipping a tracker
- * nobody asked for. Setting `NEXT_PUBLIC_ANALYTICS_ENDPOINT` switches every
- * event on, sent as a beacon so nothing blocks the page.
+ * One function, `track`, and a policy: it must never be able to break the page.
+ * Every path out of here is guarded, and a failure to record something is never
+ * surfaced to a visitor who has no way to act on it.
+ *
+ * Events go to this site's own `/analytics` by default, so the numbers live in
+ * our database and no third party is involved. Setting
+ * `NEXT_PUBLIC_ANALYTICS_ENDPOINT` points them somewhere else instead, which
+ * exists for testing against a collector rather than for shipping a tracker.
  */
 
+import {
+  isAnalyticsEventName,
+  sanitizeProperties,
+  type AnalyticsEventName,
+  type AnalyticsProperties,
+} from "@/lib/analytics-events";
 import { getAttribution } from "@/lib/attribution";
-import { analyticsEndpoint, LANDING_VERSION } from "@/lib/site";
+import { analyticsEndpoint, LANDING_VERSION, PRIVATE_PREFIX } from "@/lib/site";
+import { getVisitorId } from "@/lib/visitor";
 
-export type AnalyticsEventName =
-  | "page_view"
-  | "hero_animation_complete"
-  | "early_access_cta_clicked"
-  | "email_started"
-  | "email_submitted"
-  /**
-   * Reserved for the double opt-in step, which is deliberately out of scope for
-   * the pre-launch page. Nothing emits this yet.
-   */
-  | "email_verified"
-  | "problem_section_view"
-  | "workflow_section_view"
-  | "graph_section_view"
-  | "final_cta_view"
-  | "nav_why_clicked";
-
-export type AnalyticsProperties = Record<
-  string,
-  string | number | boolean | null | undefined
->;
+export type { AnalyticsEventName, AnalyticsProperties };
 
 type Payload = {
   event: AnalyticsEventName;
   properties: AnalyticsProperties;
   attribution: ReturnType<typeof getAttribution>;
+  visitor: string | null;
   path: string;
   version: string;
-  at: string;
 };
 
 export function buildPayload(
   event: AnalyticsEventName,
   properties: AnalyticsProperties,
-  context: { path: string; at: string },
+  context: { path: string },
 ): Payload {
   return {
     event,
-    properties,
+    properties: sanitizeProperties(properties),
     attribution: getAttribution(),
+    visitor: getVisitorId(),
     path: context.path,
     version: LANDING_VERSION,
-    at: context.at,
   };
 }
 
 /**
- * Records one event. Safe to call from anywhere: without a configured endpoint,
- * or without a browser, it does nothing at all.
+ * Records one event. Safe to call from anywhere: without a browser, without an
+ * endpoint, or with an unrecognised name it does nothing at all.
  */
 export function track(
   event: AnalyticsEventName,
@@ -68,22 +59,36 @@ export function track(
     return;
   }
 
-  const endpoint = analyticsEndpoint();
-  if (endpoint === null) {
+  // Nothing under the private prefix is ever recorded. The dashboard must not
+  // be able to count the times it is being read.
+  if (window.location.pathname.startsWith(PRIVATE_PREFIX)) {
     return;
   }
 
-  const body = JSON.stringify(
-    buildPayload(event, properties, {
-      path: window.location.pathname,
-      at: new Date().toISOString(),
-    }),
-  );
+  // Guarded here as well as on the server, so a typo in a call site fails
+  // silently in the browser instead of making a round trip to be rejected.
+  if (!isAnalyticsEventName(event)) {
+    return;
+  }
+
+  const endpoint = analyticsEndpoint();
+
+  let body: string;
+  try {
+    body = JSON.stringify(
+      buildPayload(event, properties, { path: window.location.pathname }),
+    );
+  } catch {
+    return;
+  }
 
   try {
     if (typeof navigator.sendBeacon === "function") {
-      navigator.sendBeacon(endpoint, body);
-      return;
+      // A beacon survives the page being closed, which matters for the events
+      // that fire last: a submit, or the end of an animation.
+      if (navigator.sendBeacon(endpoint, body)) {
+        return;
+      }
     }
 
     void fetch(endpoint, {
@@ -91,7 +96,7 @@ export function track(
       body,
       keepalive: true,
       headers: { "Content-Type": "application/json" },
-    });
+    }).catch(() => undefined);
   } catch {
     // Analytics must never surface an error to the visitor.
   }

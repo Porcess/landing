@@ -1,3 +1,4 @@
+import { ViewEvent } from "@/components/analytics/view-event";
 import { EarlyAccessForm } from "@/components/early-access/early-access-form";
 import { Container, Section } from "@/components/ui/section";
 import { siteCopy } from "@/content/copy";
@@ -14,6 +15,10 @@ import { SECTION } from "@/lib/site";
 export function EarlyAccessSection() {
   return (
     <Section id={SECTION.earlyAccess} labelledBy="early-access-label">
+      <ViewEvent
+        event="early_access_section_view"
+        target={SECTION.earlyAccess}
+      />
       <Container>
         <h2
           className="max-w-statement font-display text-statement font-semibold text-balance text-ink"

@@ -1,3 +1,4 @@
+import { ViewEvent } from "@/components/analytics/view-event";
 import { Container } from "@/components/ui/section";
 import { siteCopy } from "@/content/copy";
 import { SECTION } from "@/lib/site";
@@ -25,6 +26,7 @@ export function Teaser() {
       className="relative border-y border-hairline bg-ground-raised"
       id={SECTION.teaser}
     >
+      <ViewEvent event="teaser_section_view" target={SECTION.teaser} />
       {/* Same vertical rhythm as every other section, so the page keeps one
           beat. */}
       <Container className="py-20 sm:py-28 lg:py-36">

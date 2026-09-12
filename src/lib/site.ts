@@ -17,8 +17,26 @@ export const SECTION = {
   teaser: "teaser",
 } as const;
 
-/** Attributes every analytics event so multi-touch funnels stay attributable. */
-export function analyticsEndpoint(): string | null {
+/**
+ * The private area: the stats dashboard and its endpoints.
+ *
+ * One constant used by robots, by the page's metadata, and by analytics, so the
+ * three can never disagree about what counts as private. Analytics in
+ * particular must skip it: a dashboard that counted its own visits would report
+ * the numbers it is being read to check.
+ */
+export const PRIVATE_PREFIX = "/a/";
+
+/**
+ * Where the page sends its events.
+ *
+ * Defaults to this site's own endpoint, so a deployment records its numbers
+ * without anyone having to configure anything, and no third party ever sees a
+ * visitor. The environment variable is an override for pointing the page at a
+ * different collector, not a switch that has to be flipped for analytics to
+ * work at all.
+ */
+export function analyticsEndpoint(): string {
   const value = process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT;
-  return value && value.length > 0 ? value : null;
+  return value && value.length > 0 ? value : "/analytics";
 }

@@ -35,6 +35,13 @@ async function submit(email: string) {
 describe("EarlyAccessForm", () => {
   beforeEach(() => {
     window.sessionStorage.clear();
+    // jsdom has no `sendBeacon`, so analytics would fall through to `fetch` and
+    // every tracked event would be counted as a signup request by the cases
+    // below. A real browser has it, so this is the honest environment.
+    Object.defineProperty(window.navigator, "sendBeacon", {
+      configurable: true,
+      value: () => true,
+    });
     // The subscribed state lives at module scope, so it outlives a test unless
     // it is cleared. Without this every case after the first success would
     // render the confirmation instead of the form.

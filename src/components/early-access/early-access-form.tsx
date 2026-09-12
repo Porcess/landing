@@ -69,17 +69,23 @@ export function EarlyAccessForm({
       return;
     }
 
+    // Recorded on the press itself, before validation, so the funnel shows the
+    // attempts that were rejected in the browser instead of quietly losing
+    // them. A click count that only includes valid submissions cannot be used
+    // to tell "nobody clicked" apart from "everyone typed it wrong".
+    track("early_access_cta_clicked", { placement, source: "form" });
+
     const check = checkEmail(email);
     if (!check.ok) {
       setError(
         check.problem === "empty" ? siteCopy.form.empty : siteCopy.form.invalid,
       );
+      track("email_failed", { placement, reason: "invalid" });
       return;
     }
 
     setError(null);
     setPhase("submitting");
-    track("early_access_cta_clicked", { placement, source: "form" });
 
     try {
       const response = await fetch("/early-access", {
@@ -114,14 +120,18 @@ export function EarlyAccessForm({
 
       if (status === "unconfigured" || response.status === 503) {
         setError(siteCopy.form.unavailable);
+        track("email_failed", { placement, reason: "unavailable" });
       } else if (status === "invalid") {
         setError(siteCopy.form.invalid);
+        track("email_failed", { placement, reason: "invalid" });
       } else {
         setError(siteCopy.form.failed);
+        track("email_failed", { placement, reason: "error" });
       }
       setPhase("idle");
     } catch {
       setError(siteCopy.form.failed);
+      track("email_failed", { placement, reason: "error" });
       setPhase("idle");
     }
   }
