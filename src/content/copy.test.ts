@@ -48,7 +48,7 @@ describe("copy rules", () => {
   });
 });
 
-describe("the offer stays truthful", () => {
+describe("the offer stays a bare discount", () => {
   /** Any string that promises a percentage. */
   const discountStrings = strings.filter((entry) => entry.text.includes("90%"));
 
@@ -56,38 +56,26 @@ describe("the offer stays truthful", () => {
     expect(discountStrings.length).toBeGreaterThan(3);
   });
 
-  it("always scopes the discount to three months", () => {
-    // Case-insensitive: the marquee strip is uppercase, and "3 months" there is
-    // still the same scope.
-    const unscoped = discountStrings.filter(
-      (entry) => !/3 months/i.test(entry.text),
+  it("states a bare 90% off with no scope or companion promise", () => {
+    // Sentences may embed the offer ("Early birds get 90% off."), but no
+    // string may qualify it with a duration, a companion promise, or a plus.
+    const qualified = discountStrings.filter((entry) =>
+      /3 months|\bwin(s|ner)?\b|chance|free|\+/i.test(entry.text),
     );
-    // An unqualified "90% off" is the ambiguous promise worth avoiding.
-    expect(unscoped.map((entry) => entry.path)).toEqual([]);
+    expect(qualified.map((entry) => `${entry.path}: ${entry.text}`)).toEqual(
+      [],
+    );
   });
 
-  it("states the giveaway duration wherever it is offered", () => {
-    // Whole word only: a bare /win/ also matches "growing", which is not a
-    // giveaway and should not be held to these terms.
-    const giveawayStrings = strings.filter((entry) =>
-      /\bwin(s|ner)?\b/i.test(entry.text),
+  it("offers no giveaway and no duration qualifier anywhere", () => {
+    const offenders = strings.filter((entry) =>
+      /\bwin(s|ner)?\b|\bdraw\b|giveaway|no purchase|3 months/i.test(
+        entry.text,
+      ),
     );
-    expect(giveawayStrings.length).toBeGreaterThan(1);
-
-    for (const entry of giveawayStrings) {
-      const scoped = /3 months/i.test(entry.text);
-      const isLabel =
-        entry.path.endsWith("giveaway") || entry.path.endsWith("short");
-      // Labels are allowed to be short; anything that reads as a full promise
-      // must carry the duration and the no-purchase condition.
-      if (!isLabel) {
-        expect(scoped, `${entry.path} should state the duration`).toBe(true);
-      }
-    }
-  });
-
-  it("says no purchase is needed in the full giveaway terms", () => {
-    expect(siteCopy.offer.giveawayLong).toContain("No purchase needed");
+    expect(offenders.map((entry) => `${entry.path}: ${entry.text}`)).toEqual(
+      [],
+    );
   });
 });
 

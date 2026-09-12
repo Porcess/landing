@@ -9,8 +9,7 @@ import { SECTION } from "@/lib/site";
  *
  * The offer and the form come first, and the benefits follow as a plain
  * numbered list with a single hairline per row, so nothing competes with the
- * field. The first benefit carries the weight because one free month is the
- * part that matters.
+ * field. The discount carries the weight because it is the only offer.
  */
 export function EarlyAccessSection() {
   return (
@@ -31,14 +30,14 @@ export function EarlyAccessSection() {
         </div>
 
         <div className="mt-16 sm:mt-24">
-          <h3 className="font-mono text-xs tracking-label text-ink-muted">
+          <h3 className="font-mono text-xs tracking-label text-ink-muted uppercase">
             {siteCopy.earlyAccess.benefitsLabel}
           </h3>
 
           <dl className="mt-6">
             {siteCopy.earlyAccess.benefits.map((benefit) => (
               <div
-                className="grid gap-y-2 border-t border-hairline py-6 sm:grid-cols-12 sm:gap-x-6"
+                className="grid gap-y-2 border-t border-hairline py-6 last:border-b sm:grid-cols-12 sm:gap-x-6"
                 key={benefit.number}
               >
                 <dt className="sm:col-span-5 sm:flex sm:items-baseline sm:gap-4">
@@ -56,7 +55,6 @@ export function EarlyAccessSection() {
                     className={cn(
                       "mt-1 block font-display font-semibold text-ink sm:mt-0",
                       benefit.scale === "primary" && "text-2xl sm:text-3xl",
-                      benefit.scale === "secondary" && "text-xl sm:text-2xl",
                       benefit.scale === "normal" && "text-lg",
                     )}
                   >

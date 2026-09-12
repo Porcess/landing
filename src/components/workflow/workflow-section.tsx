@@ -180,6 +180,7 @@ export function WorkflowSection() {
           {/* The verdict lands only once the flow has resolved, so the line has
               something to refer to by the time it appears. */}
           <div
+            aria-hidden={resolved ? undefined : true}
             className={
               resolved
                 ? "opacity-100 transition-opacity duration-700"

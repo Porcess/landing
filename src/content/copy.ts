@@ -4,33 +4,28 @@
  * Three rules apply to all of it:
  *
  * 1. No em-dashes or en-dashes anywhere. The brief's numbered benefits are a
- *    separate column instead, and its dot-joined offer strip is separate items.
+ *    separate column instead.
  * 2. At most one middot per line.
- * 3. No claim the business cannot honour. The discount is scoped to the first
- *    three months everywhere it appears, and the giveaway states what is won,
- *    how long it lasts, and that no purchase is needed.
+ * 3. The offer is a bare "90% off" everywhere it appears, with no duration,
+ *    scope, or companion promise. There is no giveaway and no "for 3 months"
+ *    qualifier anywhere on the page (D-067).
  */
 export const siteCopy = {
   brand: "Porcess",
 
   /**
-   * The offer, stated once here so every surface says the same thing. The
-   * short form is for places with no room to qualify it; it still carries the
-   * three-month scope, because an unqualified "90% off" is the ambiguous
-   * promise worth avoiding.
+   * The offer, stated once here so every surface says the same thing. It is a
+   * bare "90% off" with no scope or companion promise (D-067).
    */
   offer: {
-    discount: "90% off your first 3 months",
-    short: "90% off for 3 months",
-    giveaway: "Chance to win 3 months free",
-    giveawayLong:
-      "One early signup wins a free subscription for 3 months, drawn when we launch. No purchase needed.",
-    strip: ["90% OFF FOR 3 MONTHS", "CHANCE TO WIN 3 MONTHS FREE"],
-    combined: "90% off for 3 months + a chance to win 3 months free",
+    discount: "90% off",
+    short: "90% off",
+    combined: "90% off",
   },
 
   nav: {
     label: "Primary",
+    why: "WHY PORCESS",
     cta: "EARLY ACCESS",
     target: "early-access",
   },
@@ -43,6 +38,9 @@ export const siteCopy = {
     after: "PORCESS",
     question: "What happens after \u201cit works\u201d?",
     hook: "You built the thing. Now comes everything else.",
+    builtByPrefix: "Built by",
+    /** Lit one at a time in the hero byline, in this order. */
+    roles: ["founders", "developers", "creators", "marketers", "students"],
   },
 
   problems: {
@@ -130,63 +128,51 @@ export const siteCopy = {
   },
 
   teaser: {
-    headline: "We\u2019re already working on it.",
-    body: "You just can\u2019t see all of it yet.",
-    /** Labels for the abstract monitor. Deliberately generic, never a real feature. */
-    monitor: [
-      "scoping",
-      "drafting",
-      "checking",
-      "publishing",
-      "measuring",
-      "revising",
+    eyebrow: "WHY WE\u2019RE BUILDING PORCESS",
+    headline: "We build it for ourselves.",
+    body: "We\u2019re a small team of friends, developers, founders, creators, marketers, and students, often all at once.",
+    detail:
+      "We\u2019re constantly building things, trying things, shipping things, and figuring out everything that comes after.",
+    closing:
+      "Porcess started as a way to deal with our own mess. Now we\u2019re building it for yours too.",
+    /** The reel's roles: lives we juggle, never statuses or progress. */
+    roles: [
+      "developer",
+      "founder",
+      "creator",
+      "marketer",
+      "student",
+      "designer",
     ],
   },
 
   earlyAccess: {
     headline: "Get in before the doors open.",
-    body: "Porcess isn\u2019t public yet. Join the early list for 90% off your first 3 months, and a chance to win 3 months free.",
+    body: "Porcess isn\u2019t public yet. Join the early list for 90% off.",
     benefitsLabel: "Early birds get:",
     /**
-     * `scale` rather than a boolean emphasis flag, because there are now two
-     * benefits worth leading with and the discount still has to be the loudest
-     * thing in the section.
+     * `scale` rather than a boolean emphasis flag, because the discount has to
+     * be the loudest thing in the section.
      */
     benefits: [
       {
         number: "01",
-        title: "90% off for 3 months",
-        body: "Your first 3 months of Porcess at 90% off when we launch.",
+        title: "90% off",
+        body: "Porcess at 90% off when we launch.",
         scale: "primary" as const,
       },
       {
         number: "02",
-        title: "Chance to win 3 months free",
-        body: "One early signup wins a free subscription for 3 months, drawn when we launch. No purchase needed.",
-        scale: "secondary" as const,
-      },
-      {
-        number: "03",
         title: "Beta access",
         body: "Get access to early builds before public launch.",
         scale: "normal" as const,
       },
       {
-        number: "04",
+        number: "03",
         title: "Help shape Porcess",
         body: "Early users can influence what we build next.",
         scale: "normal" as const,
       },
-    ],
-  },
-
-  finalCta: {
-    first: "You built the thing.",
-    second: "We\u2019ll handle what\u2019s next.",
-    points: [
-      "90% off for 3 months",
-      "Chance to win 3 months free",
-      "Beta access",
     ],
   },
 
@@ -195,8 +181,7 @@ export const siteCopy = {
     placeholder: "you@example.com",
     submit: "GET EARLY ACCESS \u2192",
     submitting: "GETTING YOU IN",
-    heroNote:
-      "Early birds get 90% off for 3 months + a chance to win 3 months free.",
+    heroNote: "Early birds get 90% off.",
     idleHint: "No spam. Just one email when it\u2019s time.",
     invalid: "That doesn\u2019t look like an email address.",
     empty: "Enter your email address to join the early list.",
@@ -205,9 +190,7 @@ export const siteCopy = {
     success: {
       headline: "You\u2019re in.",
       welcome: "Welcome to Porcess.",
-      month:
-        "You\u2019re on the list for 90% off your first 3 months when Porcess launches.",
-      later: "You\u2019re also in the draw for 3 months free.",
+      month: "You\u2019re on the list for 90% off when Porcess launches.",
       duplicate: "You were already on the list.",
     },
   },

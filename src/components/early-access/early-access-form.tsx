@@ -6,86 +6,54 @@ import { siteCopy } from "@/content/copy";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
 import { cn } from "@/lib/cn";
+import { markSubscribed, useSignupStatus } from "@/lib/signup";
 import { LANDING_VERSION } from "@/lib/site";
 import { checkEmail } from "@/lib/validation";
 
 /**
  * The only interactive element on the page.
  *
- * Used twice: in the hero on the dark ground, and in the closing section on the
- * inverted slab. The tone map keeps both placements on the same tokens, which
- * is what keeps the inversion honest rather than a second design.
+ * Used twice: opening the page and closing it. There is one tone, because the
+ * page has one surface now that the closing slab is gone.
+ *
+ * The subscribed state lives in a module store rather than here, so the second
+ * placement stops asking as soon as the first has been answered. The fields are
+ * not merely disabled on success, they are gone: there is nothing left to fill
+ * in anywhere on the page.
  */
 
-type Tone = "ground" | "slab";
-
-const TONES: Record<
-  Tone,
-  {
-    label: string;
-    input: string;
-    ring: string;
-    button: string;
-    alert: string;
-    hint: string;
-    rule: string;
-  }
-> = {
-  ground: {
-    label: "text-ink-muted",
-    input:
-      "border-hairline-strong bg-ground-raised text-ink placeholder:text-ink-muted",
-    ring: "focus-ring",
-    button: "bg-ink text-ground hover:bg-ink-muted",
-    alert: "text-danger",
-    hint: "text-ink-muted",
-    rule: "border-hairline-strong",
-  },
-  slab: {
-    label: "text-slab-ink-muted",
-    input:
-      "border-slab-ink/30 bg-slab-ink/5 text-slab-ink placeholder:text-slab-ink-muted",
-    ring: "focus-ring-inverse",
-    button: "bg-ground text-ink hover:bg-slab-ink",
-    alert: "text-danger-on-light",
-    hint: "text-slab-ink-muted",
-    rule: "border-slab-ink/25",
-  },
-};
-
-type Phase = "idle" | "submitting" | "done";
+type Phase = "idle" | "submitting";
 
 export function EarlyAccessForm({
-  tone = "ground",
   showPromise = false,
   placement,
 }: {
-  tone?: Tone;
   showPromise?: boolean;
-  placement: "hero" | "earlyAccess" | "final";
+  placement: "hero" | "earlyAccess";
 }) {
-  const styles = TONES[tone];
   const fieldId = useId();
   const hintId = `${fieldId}-hint`;
 
+  const signup = useSignupStatus();
   const [email, setEmail] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [alreadySubscribed, setAlreadySubscribed] = useState(false);
   const [honeypot, setHoneypot] = useState("");
 
   const startedRef = useRef(false);
   const successRef = useRef<HTMLDivElement>(null);
+  /** Whether this instance is the one that answered the field. */
+  const actedRef = useRef(false);
   const submitting = phase === "submitting";
 
   useEffect(() => {
-    if (phase === "done") {
-      // Move focus to the confirmation so keyboard users are not left on a
-      // control that no longer exists. The live region sits inside, so this
-      // does not double announce the text.
+    // Only the form that was actually submitted takes focus. Every other
+    // placement switches to the same confirmation, and none of them should pull
+    // the caret away from wherever the visitor happens to be reading.
+    if (signup !== null && actedRef.current) {
       successRef.current?.focus();
     }
-  }, [phase]);
+  }, [signup]);
 
   function onFirstKeystroke() {
     if (startedRef.current) {
@@ -135,8 +103,8 @@ export function EarlyAccessForm({
         response.ok &&
         (status === "subscribed" || status === "already_subscribed")
       ) {
-        setAlreadySubscribed(status === "already_subscribed");
-        setPhase("done");
+        actedRef.current = true;
+        markSubscribed(status);
         track("email_submitted", {
           placement,
           duplicate: status === "already_subscribed",
@@ -158,29 +126,28 @@ export function EarlyAccessForm({
     }
   }
 
-  if (phase === "done") {
+  // Anyone who has joined the list sees the confirmation, wherever the field
+  // appears on the page. No input, no button, nothing still asking.
+  if (signup !== null) {
     return (
       <div data-early-access={placement}>
         <div
+          className="border-t border-hairline-strong pt-5 outline-none"
           ref={successRef}
           tabIndex={-1}
-          className={cn("border-t pt-5 outline-none", styles.rule)}
         >
           <div role="status">
             <p className="font-display text-lead font-medium">
               {siteCopy.form.success.headline}
             </p>
-            <p className={cn("mt-2 text-sm", styles.hint)}>
+            <p className="mt-2 text-sm text-ink-muted">
               {siteCopy.form.success.welcome}
             </p>
-            <p className={cn("mt-4 text-sm", styles.hint)}>
+            <p className="mt-4 text-sm text-ink-muted">
               {siteCopy.form.success.month}
             </p>
-            <p className={cn("mt-1 text-sm", styles.hint)}>
-              {siteCopy.form.success.later}
-            </p>
-            {alreadySubscribed ? (
-              <p className={cn("mt-4 text-sm", styles.hint)}>
+            {signup === "already_subscribed" ? (
+              <p className="mt-4 text-sm text-ink-muted">
                 {siteCopy.form.success.duplicate}
               </p>
             ) : null}
@@ -198,10 +165,7 @@ export function EarlyAccessForm({
       onSubmit={onSubmit}
     >
       <label
-        className={cn(
-          "font-mono text-xs tracking-label uppercase",
-          styles.label,
-        )}
+        className="font-mono text-xs tracking-label text-ink-muted uppercase"
         htmlFor={fieldId}
       >
         {siteCopy.form.label}
@@ -212,11 +176,7 @@ export function EarlyAccessForm({
           aria-describedby={hintId}
           aria-invalid={error !== null}
           autoComplete="email"
-          className={cn(
-            "h-12 w-full rounded-xs border px-4 text-base transition-colors duration-150 sm:flex-1",
-            styles.input,
-            styles.ring,
-          )}
+          className="focus-ring h-12 w-full rounded-xs border border-hairline-strong bg-ground-raised px-4 text-base text-ink transition-colors duration-150 placeholder:text-ink-muted sm:flex-1"
           id={fieldId}
           inputMode="email"
           name="email"
@@ -231,11 +191,7 @@ export function EarlyAccessForm({
         />
 
         <button
-          className={cn(
-            "h-12 shrink-0 rounded-xs px-6 font-mono text-xs tracking-label whitespace-nowrap uppercase transition-colors duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60",
-            styles.button,
-            styles.ring,
-          )}
+          className="focus-ring h-12 shrink-0 rounded-xs bg-ink px-6 font-mono text-xs tracking-label whitespace-nowrap text-ground uppercase transition-colors duration-150 hover:bg-ink-muted active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
           disabled={submitting}
           type="submit"
         >
@@ -246,7 +202,7 @@ export function EarlyAccessForm({
       {/* Off-screen, never focusable, never shown to anyone reading the page. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-0 -left-2 size-px overflow-hidden opacity-0"
+        className="pointer-events-none absolute top-0 left-0 size-px overflow-hidden opacity-0"
       >
         <label htmlFor={`${fieldId}-company`}>Company</label>
         <input
@@ -261,7 +217,10 @@ export function EarlyAccessForm({
 
       {/* One reserved row, so switching between hint and error never shifts. */}
       <p
-        className={cn("min-h-5 text-sm", error ? styles.alert : styles.hint)}
+        className={cn(
+          "min-h-5 text-sm",
+          error ? "text-danger" : "text-ink-muted",
+        )}
         id={hintId}
         {...(error ? { role: "alert" } : {})}
       >

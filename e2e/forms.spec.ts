@@ -79,7 +79,7 @@ test("shows the submitting state while the request is in flight", async ({
   await expect(form.getByText("You\u2019re in.")).toBeVisible();
 });
 
-test("confirms a new signup and states the free month", async ({ page }) => {
+test("confirms a new signup and states the discount", async ({ page }) => {
   await page.route("**/early-access", (route) =>
     json(route, 200, { status: "subscribed" }),
   );
@@ -94,12 +94,10 @@ test("confirms a new signup and states the free month", async ({ page }) => {
   await expect(form.getByText("Welcome to Porcess.")).toBeVisible();
   await expect(
     form.getByText(
-      "You\u2019re on the list for 90% off your first 3 months when Porcess launches.",
+      "You\u2019re on the list for 90% off when Porcess launches.",
     ),
   ).toBeVisible();
-  await expect(
-    form.getByText("You\u2019re also in the draw for 3 months free."),
-  ).toBeVisible();
+  await expect(form.getByText(/draw|3 months free/i)).toHaveCount(0);
 
   // The confirmation must not shove the page around.
   const after = await form.boundingBox();
@@ -190,17 +188,59 @@ test("the real endpoint fails closed without a database", async ({ page }) => {
   );
 });
 
-test("the closing call to action works too", async ({ page }) => {
+test("answering one placement settles every other one on the page", async ({
+  page,
+}) => {
   await page.route("**/early-access", (route) =>
     json(route, 200, { status: "subscribed" }),
   );
 
   await page.goto("/");
-  const form = page.locator("#final-cta [data-early-access='final']").first();
-  await form.scrollIntoViewIfNeeded();
+
+  // The page offers the field twice. Both are asking before the visitor replies.
+  const fields = page.locator("[data-early-access] input[name='email']");
+  await expect(fields).toHaveCount(2);
+
+  const hero = page.locator("[data-early-access='hero']").first();
+  await hero.scrollIntoViewIfNeeded();
+  await hero.getByLabel("Email address").fill(EMAIL);
+  await hero.getByRole("button").click();
+
+  await expect(page.getByText("You\u2019re in.").first()).toBeVisible();
+
+  // And the fields are gone from the whole page, not just from the form that
+  // was used: nothing is still asking for an address that was just handed over.
+  await expect(page.locator("input[name='email']")).toHaveCount(0);
+  await expect(
+    page.locator("[data-early-access]").getByRole("button"),
+  ).toHaveCount(0);
+  await expect(page.locator("[data-early-access]")).toHaveCount(2);
+  await expect(page.getByText("You\u2019re in.")).toHaveCount(2);
+
+  await page.screenshot({ path: "test-results/shots/signup-settled.png" });
+});
+
+test("a reload does not ask a second time", async ({ page }) => {
+  await page.route("**/early-access", (route) =>
+    json(route, 200, { status: "subscribed" }),
+  );
+
+  const form = await heroForm(page);
   await form.getByLabel("Email address").fill(EMAIL);
   await form.getByRole("button").click();
-
   await expect(form.getByText("You\u2019re in.")).toBeVisible();
-  await page.screenshot({ path: "test-results/shots/final-cta-success.png" });
+
+  // Reload the page the way a visitor would. The field must not come back.
+  await page.reload();
+  await expect(page.locator('[data-hero-ready="true"]')).toBeAttached({
+    timeout: 20_000,
+  });
+
+  await expect(page.locator("input[name='email']")).toHaveCount(0);
+  await expect(
+    page.locator("[data-early-access]").getByRole("button"),
+  ).toHaveCount(0);
+  await expect(page.getByText("You\u2019re in.")).toHaveCount(2);
+
+  await page.screenshot({ path: "test-results/shots/reload-remembered.png" });
 });

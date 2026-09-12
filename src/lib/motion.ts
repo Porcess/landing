@@ -11,10 +11,13 @@
 export const EASE_ENTER = [0.16, 1, 0.3, 1] as const;
 
 /**
- * A large element crossing a distance: gentle at both ends, so it never jerks
- * into motion or stops dead. The hero's scan line.
+ * A large element crossing a distance: the hero's scan line.
+ *
+ * Weighted so it is already moving when it becomes visible. The earlier curve
+ * spent its first fifth of time covering almost no ground, which read as the
+ * line hesitating at the edge before committing to the crossing.
  */
-export const EASE_SWEEP = [0.5, 0, 0.2, 1] as const;
+export const EASE_SWEEP = [0.4, 0.1, 0.3, 1] as const;
 
 /**
  * A state change settling into place. A long decelerate with no overshoot:

@@ -116,6 +116,13 @@ test.describe("accessibility", () => {
     );
 
     await page.goto("/");
+    // The hero settles before the audit. Sampling it mid reveal reports the
+    // fading copy as unreadable text, which says nothing about the page a
+    // visitor actually ends up looking at.
+    await expect(page.locator('[data-hero-ready="true"]')).toBeAttached({
+      timeout: 20_000,
+    });
+
     const form = page.locator("[data-early-access='hero']").first();
     await form.getByLabel("Email address").fill("builder@example.com");
     await form.getByRole("button").click();
@@ -131,6 +138,12 @@ test.describe("accessibility", () => {
 
   test("the error state is clean", async ({ page }) => {
     await page.goto("/");
+    // Same reason as the confirmation state: audit the page the visitor ends up
+    // on, not a frame of the hero still fading in.
+    await expect(page.locator('[data-hero-ready="true"]')).toBeAttached({
+      timeout: 20_000,
+    });
+
     const form = page.locator("[data-early-access='hero']").first();
     await form.getByRole("button").click();
     await expect(form.getByRole("alert")).toBeVisible();

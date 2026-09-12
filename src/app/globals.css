@@ -12,22 +12,18 @@
    No third radius is allowed.
    --------------------------------------------------------------------------- */
 @theme {
-  /* Surfaces: page, raised panel, and the single inverted closing slab. */
+  /* Surfaces: page and raised panel. The page is dark throughout; the closing
+     light slab was removed along with the second call to action, so there is no
+     inverted surface left to token. */
   --color-ground: #0c0c0b;
   --color-ground-raised: #141413;
-  --color-slab: #f4f4f2;
 
   /* Ink. Two text steps only: `ink-muted` clears 4.5:1 on every surface it is
      used on, and anything lighter is a hairline rather than text. */
   --color-ink: #f4f4f2;
   --color-ink-muted: #9a9a97;
-  --color-slab-ink: #0c0c0b;
-  --color-slab-ink-muted: #5c5c5a;
 
   --color-danger: #ff6b57;
-  /* The same role on the light closing slab, where #ff6b57 would only reach
-     2.5:1. Errors are the one thing that must survive the inversion. */
-  --color-danger-on-light: #a32318;
 
   --color-hairline: #2a2a28;
   --color-hairline-strong: #3d3d3a;
@@ -119,17 +115,11 @@ body {
    Utilities
    --------------------------------------------------------------------------- */
 
-/* One focus treatment for the whole page, inverted on the closing slab. */
+/* One focus treatment for the whole page. There is a single surface now, so
+   there is nothing to invert against. */
 @utility focus-ring {
   &:focus-visible {
     outline: 2px solid var(--color-ink);
-    outline-offset: 3px;
-  }
-}
-
-@utility focus-ring-inverse {
-  &:focus-visible {
-    outline: 2px solid var(--color-ground);
     outline-offset: 3px;
   }
 }
@@ -158,37 +148,85 @@ body {
 
 /* ---------------------------------------------------------------------------
    Hero
-   --------------------------------------------------------------------------- */
+   ---------------------------------------------------------------------------
+   The word is seven seats. Five hold a single glyph; the two the line crosses
+   hold the letter they show and the letter arriving, stacked in the same cell.
 
-/* The scan line: a vertical rule that travels across the word, with its ends
-   faded so it reads as a line rather than a bar.
+   The arriving letter is revealed by a horizontal clip that tracks the line, so
+   the seam between the old letter and the new one is exactly where the line is.
+   That is the whole trick: the line does not merely pass while the letters
+   change somewhere near it, the line is the edge that changes them, and the
+   change is a hard cut rather than a fade. Nothing is ever drawn at partial
+   opacity, so there is no moment where two glyphs are composited into a third
+   shape that is neither letter.
+
+   Both glyphs sit in the same cell, so the seat is as wide as the wider of the
+   two and the word's box is identical before, during and after the change.
+   Nothing reflows. */
+.hero-word {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  line-height: 1;
+}
+
+.hero-seat {
+  display: inline-grid;
+  height: 1em;
+  overflow: hidden;
+}
+
+.hero-glyph {
+  /* Both glyphs occupy the same cell. The arriving one is later in the document
+     order, so it paints over the one it is replacing. */
+  grid-area: 1 / 1;
+  display: block;
+  height: 1em;
+  line-height: 1em;
+  text-align: center;
+}
+
+/* The carrier for the line. It is exactly as wide as the word, so a percentage
+   translation on it is a percentage of the word, and its left edge is the point
+   the line crosses. Nothing may wrap the line itself: an opacity or transform on
+   an ancestor would isolate its blending and it would vanish over a stroke. */
+.hero-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* The scan line: a thin bright rule that crosses the word, with its ends faded
+   so it reads as a line rather than a bar.
 
    Drawn with difference blending on purpose. A plain white line disappears the
    moment it meets a white stroke, which defeats the entire idea of a line that
    passes over the letters and changes them: it would only ever be visible in the
    gaps between glyphs. Inverting whatever is behind it keeps one continuous line
    across the whole word, appearing near-white over the ground and near-black over
-   a glyph. No glow, no colour, just the inversion. */
-.hero-scan {
+   a glyph. No glow, no colour, just the inversion.
+
+   There was briefly a translucent wash trailing it. Over a near-black ground a
+   wide semi-transparent band reads as a grey rectangle parked next to the line,
+   not as a trail, so the line carries the effect alone. */
+.hero-line {
+  position: absolute;
+  top: -0.06em;
+  bottom: -0.06em;
+  left: 0;
+  width: 2px;
   background-image: linear-gradient(
     to bottom,
     transparent 0%,
-    var(--color-ink) 15%,
-    var(--color-ink) 85%,
+    var(--color-ink) 10%,
+    var(--color-ink) 90%,
     transparent 100%
   );
   mix-blend-mode: difference;
-}
-
-/* A faint wash trailing the line, so the pass has a direction instead of looking
-   like a bare cursor crossing the page. */
-.hero-scan-tail {
-  background-image: linear-gradient(
-    to left,
-    color-mix(in oklab, var(--color-ink) 9%, transparent),
-    transparent
-  );
-  mix-blend-mode: difference;
+  opacity: 0;
 }
 
 /* ---------------------------------------------------------------------------
@@ -214,23 +252,86 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   Offer marquee
+   Role reel
    ---------------------------------------------------------------------------
-   Text only, and gated behind a motion preference: the strip reads exactly the
-   same sitting still, it just stops travelling. */
-@keyframes offer-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
+   The right half of the origin story: a column of roles travelling upward,
+   with one lit at a time.
+
+   Two variables drive everything, so no measurement is needed and nothing can
+   drift out of step at a breakpoint. The slot is one row's height and the size
+   is the type; the type is smaller than the slot, which is what keeps a word
+   from touching its neighbours as it moves. `--reel-visible` is set by the
+   component, so the number of rows on screen has exactly one source.
+
+   The track is three copies of the role list, which is what makes the wrap
+   invisible: by the time the reel has walked one copy, the window it is showing
+   is word for word identical to the one it jumps back to. */
+.role-reel,
+.role-reel-static {
+  --reel-slot: clamp(3.25rem, 9.8vw, 8.75rem);
+  --reel-size: clamp(2.25rem, 7.2vw, 6.5rem);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .offer-marquee {
-    animation: offer-marquee 44s linear infinite;
-  }
+.role-reel {
+  height: calc(var(--reel-slot) * var(--reel-visible, 5));
+  /* Clips the rows above and below the window. Sized so the longest word plus
+     the lit word's scale still fits, which is verified rather than assumed. */
+  overflow: hidden;
+}
+
+.role-reel-track {
+  display: flex;
+  flex-direction: column;
+}
+
+.role-reel-slot {
+  display: flex;
+  height: var(--reel-slot);
+  align-items: center;
+}
+
+.role-reel-word {
+  display: block;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--reel-size);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+  /* A role must never wrap inside its slot: a two line word would break the
+     reel's rhythm and change a row's height. Sized so the longest word fits with
+     room to spare, and asserted in the browser tests. */
+  white-space: nowrap;
+  /* Grows from the left edge, so every word keeps the same left alignment
+     whatever its size. */
+  transform-origin: left center;
+  transition:
+    opacity 700ms cubic-bezier(0.25, 1, 0.4, 1),
+    transform 700ms cubic-bezier(0.25, 1, 0.4, 1);
+}
+
+/* The lit word: a touch larger as well as brighter, so it holds the eye. */
+.role-reel-word-lit {
+  transform: scale(1.05);
+}
+
+/* Reduced motion keeps every role on the page, set at the same scale, with no
+   travel and no dimming: nothing is hidden and nothing moves.
+   
+   Six rows are sized to fit exactly the height the reel occupies, because the
+   server cannot know the preference and ships the reel markup first. If this
+   variant were taller, the swap on hydration would push the whole section down
+   for the people it exists to protect. */
+.role-reel-static {
+  display: flex;
+  flex-direction: column;
+}
+
+.role-reel-static li {
+  display: flex;
+  height: calc(var(--reel-slot) * 5 / 6);
+  align-items: center;
 }
 
 /* ---------------------------------------------------------------------------

@@ -18,11 +18,14 @@ import { EASE_ENTER, PULSE_SECONDS } from "@/lib/motion";
  * Wide: nodes are absolutely positioned HTML over an SVG edge layer, on a box
  * whose aspect ratio matches the design space exactly. That equality is what
  * makes the percentage positions and the SVG coordinates line up, and it is why
- * nothing is distorted when the box scales.
+ * nothing is distorted when the box scales. Wide starts at `lg`: at `md` widths
+ * the design-space node boxes render too narrow for labels like DISTRIBUTE,
+ * which bled past the card border.
  *
  * Narrow: the same story told as a vertical rail. A branching diagram squeezed
- * onto a phone is unreadable, so the small screen gets a sequence with the same
- * states, the same statuses and the same pulses down a single line.
+ * onto a narrow screen is unreadable, so anything below `lg` gets a sequence
+ * with the same states, the same statuses and the same pulses down a single
+ * line.
  */
 
 const APPEAR_EASE = EASE_ENTER;
@@ -58,7 +61,7 @@ export function FlowGraph({
     <>
       {/* Wide: the branching diagram. */}
       <div
-        className="relative hidden w-full md:block"
+        className="relative hidden w-full lg:block"
         role="img"
         aria-label={label}
         style={{ aspectRatio: `${frame.width} / ${frame.height}` }}
@@ -103,7 +106,7 @@ export function FlowGraph({
           No `role` here. An earlier revision put `role="img"` on this list,
           which hid the list semantics and left every `li` orphaned in the
           accessibility tree. The order carries the meaning on its own. */}
-      <ol aria-label={label} className="flex flex-col md:hidden">
+      <ol aria-label={label} className="flex flex-col lg:hidden">
         {sequence.map((id, index) => {
           const node = nodes.get(id);
           if (node === undefined) {

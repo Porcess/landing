@@ -14,8 +14,12 @@ vi.mock("next/server", () => ({
 
 const { GET, POST } = await import("./route");
 
-function post(body: unknown, origin?: string): Request {
-  return new Request("https://porcess.com/early-access", {
+function post(
+  body: unknown,
+  origin?: string,
+  url = "https://porcess.com/early-access",
+): Request {
+  return new Request(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -117,6 +121,35 @@ describe("POST /early-access", () => {
     const response = await POST(post(validSubmission, "https://porcess.com"));
 
     expect(response.status).toBe(200);
+  });
+
+  it("treats loopback forms of the same machine and port as same-origin", async () => {
+    // The production server can canonicalize its own hostname to `localhost`
+    // while the page was reached over `127.0.0.1`. That must not read as a
+    // forgery, or no signup from that address can ever succeed.
+    const response = await POST(
+      post(
+        validSubmission,
+        "http://127.0.0.1:3106",
+        "http://localhost:3106/early-access",
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(insertSignup).toHaveBeenCalledTimes(1);
+  });
+
+  it("still rejects a loopback origin aimed at a different port", async () => {
+    const response = await POST(
+      post(
+        validSubmission,
+        "http://127.0.0.1:3106",
+        "http://localhost:3105/early-access",
+      ),
+    );
+
+    expect(response.status).toBe(403);
+    expect(insertSignup).not.toHaveBeenCalled();
   });
 
   it("fails closed when the database is not configured", async () => {

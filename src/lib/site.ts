@@ -14,6 +14,7 @@ export const SITE_URL = (
 export const SECTION = {
   main: "main-content",
   earlyAccess: "early-access",
+  teaser: "teaser",
 } as const;
 
 /** Attributes every analytics event so multi-touch funnels stay attributable. */

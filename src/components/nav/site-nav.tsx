@@ -15,8 +15,8 @@ import { SECTION } from "@/lib/site";
  *
  * The offer appears in the bar only once the visitor has scrolled past the hero,
  * so the opening viewport stays quiet and the offer is still present on every
- * screen below it. Below `sm` it stays out of the way entirely: the hero note,
- * the marquee and two sections already carry it, and crowding this bar is how a
+ * screen below it. Below `sm` it stays out of the way entirely: the hero note
+ * and two sections already carry it, and crowding this bar is how a
  * clean nav starts looking like an ad.
  *
  * The scrolled state is driven by Motion's scroll value rather than a raw
@@ -58,6 +58,14 @@ export function SiteNav() {
           >
             {siteCopy.offer.short}
           </span>
+
+          <a
+            className="focus-ring hidden font-mono text-xs tracking-label text-ink-muted uppercase transition-colors duration-150 hover:text-ink sm:block"
+            href={`#${SECTION.teaser}`}
+            onClick={() => track("nav_why_clicked")}
+          >
+            {siteCopy.nav.why}
+          </a>
 
           <a
             className="focus-ring font-mono text-xs tracking-label text-ink-muted uppercase transition-colors duration-150 hover:text-ink"

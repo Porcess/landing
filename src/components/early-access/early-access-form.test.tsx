@@ -1,10 +1,17 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { siteCopy } from "@/content/copy";
+import { forgetSignup } from "@/lib/signup";
 
 import { EarlyAccessForm } from "./early-access-form";
 
@@ -28,6 +35,10 @@ async function submit(email: string) {
 describe("EarlyAccessForm", () => {
   beforeEach(() => {
     window.sessionStorage.clear();
+    // The subscribed state lives at module scope, so it outlives a test unless
+    // it is cleared. Without this every case after the first success would
+    // render the confirmation instead of the form.
+    forgetSignup();
   });
 
   afterEach(() => {
@@ -72,7 +83,7 @@ describe("EarlyAccessForm", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("confirms a new signup and states the free month", async () => {
+  it("confirms a new signup and states the discount", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => respond(200, { status: "subscribed" })),
@@ -100,7 +111,7 @@ describe("EarlyAccessForm", () => {
       return respond(200, { status: "subscribed" });
     });
     vi.stubGlobal("fetch", fetchMock);
-    render(<EarlyAccessForm placement="final" />);
+    render(<EarlyAccessForm placement="earlyAccess" />);
 
     await submit("builder@example.com");
 
@@ -157,5 +168,69 @@ describe("EarlyAccessForm", () => {
       "textContent",
       siteCopy.form.unavailable,
     );
+  });
+
+  it("stops asking in every placement once one of them is answered", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => respond(200, { status: "subscribed" })),
+    );
+    render(
+      <>
+        <EarlyAccessForm placement="hero" />
+        <EarlyAccessForm placement="earlyAccess" />
+      </>,
+    );
+
+    // Both placements are asking to begin with.
+    expect(screen.getAllByLabelText(siteCopy.form.label)).toHaveLength(2);
+
+    const hero = document.querySelector("[data-early-access='hero']");
+    if (hero === null) {
+      throw new Error("expected the hero placement to render");
+    }
+
+    const user = userEvent.setup();
+    await user.type(
+      within(hero as HTMLElement).getByLabelText(siteCopy.form.label),
+      "builder@example.com",
+    );
+    await user.click(within(hero as HTMLElement).getByRole("button"));
+
+    // Both confirmations take over, and no field is left anywhere on the page:
+    // the second placement must not ask for an address that was just given.
+    await waitFor(() =>
+      expect(screen.getAllByText(siteCopy.form.success.headline)).toHaveLength(
+        2,
+      ),
+    );
+    expect(screen.queryByLabelText(siteCopy.form.label)).toBeNull();
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    expect(screen.queryAllByRole("textbox")).toHaveLength(0);
+  });
+
+  it("writes the answer to storage, so a reload can find it", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => respond(200, { status: "subscribed" })),
+    );
+    render(<EarlyAccessForm placement="hero" />);
+
+    await submit("builder@example.com");
+    await screen.findByText(siteCopy.form.success.headline);
+
+    expect(window.localStorage.getItem("porcess.early-access")).toBe(
+      "subscribed",
+    );
+  });
+
+  it("opens already answered for a visitor who has been here before", () => {
+    // Seeded after the beforeEach clear, so this is what a returning visitor's
+    // browser looks like before the page has run a line of its own.
+    window.localStorage.setItem("porcess.early-access", "subscribed");
+    render(<EarlyAccessForm placement="hero" />);
+
+    expect(screen.queryByLabelText(siteCopy.form.label)).toBeNull();
+    expect(screen.getByText(siteCopy.form.success.headline)).toBeTruthy();
   });
 });

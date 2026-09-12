@@ -43,7 +43,11 @@ import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
  * static rather than as something working.
  */
 const CADENCE_MS = 3000;
-const OFFSET = 30;
+/**
+ * Short, quiet travel. Both statements ride the same curve and duration, so the
+ * change reads as one continuous scroll rather than two separate animations.
+ */
+const OFFSET = 20;
 const EASE = EASE_CROSSFADE;
 
 export function ProblemRotation() {
@@ -137,26 +141,31 @@ export function ProblemRotation() {
                   opacity: active ? 1 : 0,
                   y: active ? 0 : reduced ? 0 : leaving ? -OFFSET : OFFSET,
                 }}
+                aria-hidden={active ? undefined : true}
                 className={cn(
                   "col-start-1 row-start-1",
                   active ? undefined : "pointer-events-none",
                 )}
+                inert={!active}
                 initial={false}
                 key={item.id}
                 transition={{
                   // Asymmetric on purpose. A symmetric crossfade puts the
                   // outgoing and incoming statements at half opacity at the same
-                  // moment, which reads as two overlapping headlines. Timed to
-                  // finish well inside the shorter cadence: a transition that
-                  // runs most of the cycle never looks settled.
+                  // moment, which reads as two overlapping headlines. The old
+                  // statement leaves over 0.3s and the new one follows almost
+                  // at once, so there is neither a snap nor a blank hole: the
+                  // pair hands over like a filmstrip. Timed to finish well
+                  // inside the shorter cadence: a transition that runs most of
+                  // the cycle never looks settled.
                   opacity: active
                     ? {
-                        duration: 0.4,
-                        delay: reduced ? 0 : 0.22,
+                        duration: 0.45,
+                        delay: reduced ? 0 : 0.16,
                         ease: "easeOut",
                       }
-                    : { duration: 0.2, ease: "easeIn" },
-                  y: { duration: reduced ? 0 : 0.55, ease: EASE },
+                    : { duration: 0.3, ease: "easeIn" },
+                  y: { duration: reduced ? 0 : 0.6, ease: EASE },
                 }}
               >
                 <h3 className="max-w-statement font-display text-statement font-semibold text-ink">

@@ -29,5 +29,9 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: false,
     timeout: 120_000,
+    // The suite must never write to a real database: forcing the connection
+    // string empty keeps the signup path on its fail-closed branch, which is
+    // what "the real endpoint fails closed without a database" asserts.
+    env: { ...process.env, DATABASE_URL: "" },
   },
 });

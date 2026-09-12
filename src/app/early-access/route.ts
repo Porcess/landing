@@ -81,10 +81,34 @@ function isSameOrigin(request: Request): boolean {
   }
 
   try {
-    return new URL(origin).host === new URL(request.url).host;
+    const originUrl = new URL(origin);
+    const requestUrl = new URL(request.url);
+    if (originUrl.host === requestUrl.host) {
+      return true;
+    }
+    // The production server can canonicalize its own hostname (notably
+    // `localhost` when the page was reached over `127.0.0.1`), so loopback
+    // forms of the same machine and port compare as the same origin rather
+    // than as a forgery.
+    return (
+      originUrl.protocol === requestUrl.protocol &&
+      originUrl.port === requestUrl.port &&
+      isLoopback(originUrl.hostname) &&
+      isLoopback(requestUrl.hostname)
+    );
   } catch {
     return false;
   }
+}
+
+/** Hostnames that always mean this machine. */
+function isLoopback(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]"
+  );
 }
 
 type ForwardedSignup = {
