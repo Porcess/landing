@@ -7,9 +7,27 @@
  */
 export const LANDING_VERSION = "v1";
 
-export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://porcess.com"
-).replace(/\/+$/, "");
+const FALLBACK_SITE_URL = "https://porcess.com";
+
+/**
+ * The canonical origin. Empty, whitespace-only, or unparsable
+ * `NEXT_PUBLIC_SITE_URL` values fall back to the production origin instead of
+ * throwing during static prerender (Vercel reports this as
+ * `Failed to collect configuration for /_not-found` with `ERR_INVALID_URL`).
+ */
+function resolveSiteUrl(): string {
+  const raw = (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim();
+  if (raw.length === 0) {
+    return FALLBACK_SITE_URL;
+  }
+  try {
+    return new URL(raw).toString().replace(/\/+$/, "");
+  } catch {
+    return FALLBACK_SITE_URL;
+  }
+}
+
+export const SITE_URL = resolveSiteUrl();
 
 export const SECTION = {
   main: "main-content",
