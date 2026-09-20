@@ -21,8 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 /**
- * The site is meant to be found, which is why robots is permissive here. The
- * description sells the problem and never the undisclosed product.
+ * The site is meant to be found, which is why robots is permissive here.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -57,8 +56,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  colorScheme: "dark",
-  themeColor: "#0c0c0b",
+  colorScheme: "light",
+  themeColor: "#f6f4ee",
 };
 
 /**

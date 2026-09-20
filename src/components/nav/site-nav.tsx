@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
 import { SECTION } from "@/lib/site";
 
 /**
- * Two items plus the offer, one line, no menu.
+ * Two anchors plus the offer, one line, no menu.
  *
  * The offer appears in the bar only once the visitor has scrolled past the hero,
  * so the opening viewport stays quiet and the offer is still present on every
@@ -61,10 +61,10 @@ export function SiteNav() {
 
           <a
             className="focus-ring hidden font-mono text-xs tracking-label text-ink-muted uppercase transition-colors duration-150 hover:text-ink sm:block"
-            href={`#${SECTION.teaser}`}
+            href={`#${SECTION.howItWorks}`}
             onClick={() => track("nav_why_clicked")}
           >
-            {siteCopy.nav.why}
+            {siteCopy.nav.howItWorks}
           </a>
 
           <a

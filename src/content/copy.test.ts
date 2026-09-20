@@ -79,29 +79,14 @@ describe("the offer stays a bare discount", () => {
   });
 });
 
-describe("the product stays unrevealed", () => {
-  it("never names internal machinery in visible copy", () => {
-    // Words that describe how the product works rather than the problem. None
-    // of these belong on a teaser.
-    const forbidden = [
-      "agent",
-      "AI",
-      "LLM",
-      "model",
-      "autonomous",
-      "runtime",
-      "workflow engine",
-      "pipeline",
-    ];
-
-    for (const entry of strings) {
-      for (const term of forbidden) {
-        const pattern = new RegExp(`\\b${term}\\b`, "i");
-        expect(
-          pattern.test(entry.text),
-          `${entry.path} should not use "${term}"`,
-        ).toBe(false);
-      }
-    }
+describe("the product copy stays grounded", () => {
+  it("names the current agent workflows", () => {
+    expect(siteCopy.agents.map((agent) => agent.id)).toEqual([
+      "clips",
+      "shorts",
+      "marketing",
+      "seo",
+    ]);
+    expect(siteCopy.howItWorks.steps).toHaveLength(4);
   });
 });

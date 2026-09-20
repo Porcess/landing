@@ -3,9 +3,9 @@
 The public pre-launch page for Porcess, served at <https://porcess.com>.
 
 This is a self-contained Next.js application. It shares no code with the product
-frontend in `../frontend` and deliberately does not describe what the product
-does: it sells the problem, withholds the solution, and collects early-access
-signups.
+frontend in `../frontend`. It explains the current Porcess agent workflows,
+collects early-access signups, and keeps analytics and signup storage local to
+this landing repository.
 
 ## Running it
 
@@ -75,10 +75,9 @@ resets that id, which is why the visitor count is honest rather than exact.
 
 - `src/content/copy.ts` holds every string a visitor can read, so the page's
   wording is reviewable in one place.
-- `src/components/hero/` is the signature moment: a hairline sweeps across the
-  word and the two letters it crosses change places. Each swapping letter is
-  drawn twice inside one grid cell, which is what keeps the word from reflowing
-  mid animation.
+- `src/components/agents/` owns the editorial agent deck and its per-agent
+  workflow artwork. `src/components/hero/product-hero.tsx` composes the deck
+  with the product explanation and early-access form.
 - `src/lib/early-access/store.ts` holds the signup write, and the unique index
   on `email_normalized` is what makes duplicate submissions impossible rather
   than merely unlikely. It uses `pg` rather than a Neon-specific driver, so the
@@ -110,12 +109,12 @@ directly when changing copy.
 
 ## Design decisions worth knowing
 
-- **Monochrome, no accent hue.** The signature is the letter swap, not a colour.
-  There is exactly one inverted section, the closing call to action.
-- **Two radii only.** 2px on interactive controls, 0 on everything else.
-- **No images, no icons, no WebGL.** Type, hairlines, and motion carry the page.
-  The teaser is deliberately non-representational: it is not a product mock, and
-  there are no screenshots of the real product anywhere on this site.
+- **Editorial agent deck.** The four cards are product-specific workflow
+  illustrations, not generic feature tiles or screenshots of unsupported UI.
+- **Light canvas, restrained color.** The ground is warm and quiet; color is
+  reserved for the agent cards and literal workflow signals.
+- **Two radii on controls and cards.** 2px on interactive controls and 16px on
+  the oversized agent cards.
 - **No fake social proof.** No testimonials, counters, logos, or metrics, because
   none are real yet. Add them only when they are.
 - **Analytics is first party.** Events go to this repository's own `/analytics`

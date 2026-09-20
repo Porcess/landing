@@ -32,7 +32,8 @@ export const SITE_URL = resolveSiteUrl();
 export const SECTION = {
   main: "main-content",
   earlyAccess: "early-access",
-  teaser: "teaser",
+  agents: "agents",
+  howItWorks: "how-it-works",
 } as const;
 
 /**
