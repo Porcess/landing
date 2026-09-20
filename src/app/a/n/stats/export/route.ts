@@ -56,6 +56,8 @@ export async function GET(request: Request): Promise<Response> {
     "utm_source",
     "utm_campaign",
     "landing_page_version",
+    "offer_percent",
+    "base_price_cents",
   ];
 
   const lines = [
@@ -68,6 +70,8 @@ export async function GET(request: Request): Promise<Response> {
         cell(safe(row.utmSource)),
         cell(safe(row.utmCampaign)),
         cell(safe(row.landingPageVersion)),
+        cell(String(row.offerPercent)),
+        cell(String(row.basePriceCents)),
       ].join(","),
     ),
   ];

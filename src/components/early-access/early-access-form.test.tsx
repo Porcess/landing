@@ -10,10 +10,16 @@ import {
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { siteCopy } from "@/content/copy";
+import { fillOffer, siteCopy } from "@/content/copy";
 import { forgetSignup } from "@/lib/signup";
 
 import { EarlyAccessForm } from "./early-access-form";
+
+const OFFER = { percent: 90, basePriceCents: 2000 };
+
+function form(placement: "hero" | "earlyAccess") {
+  return <EarlyAccessForm offer={OFFER} placement={placement} />;
+}
 
 function respond(status: number, payload: unknown): Response {
   return {
@@ -56,7 +62,7 @@ describe("EarlyAccessForm", () => {
   });
 
   it("offers one labelled email field and nothing else to fill in", () => {
-    render(<EarlyAccessForm placement="hero" />);
+    render(form("hero"));
 
     expect(screen.getAllByRole("textbox")).toHaveLength(1);
     expect(screen.getByLabelText(siteCopy.form.label)).toBeTruthy();
@@ -65,7 +71,7 @@ describe("EarlyAccessForm", () => {
   it("refuses an empty submission without calling the server", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    render(<EarlyAccessForm placement="hero" />);
+    render(form("hero"));
 
     await submit("");
 
@@ -79,7 +85,7 @@ describe("EarlyAccessForm", () => {
   it("refuses a malformed address without calling the server", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    render(<EarlyAccessForm placement="hero" />);
+    render(form("hero"));
 
     await submit("builder@");
 
@@ -90,19 +96,25 @@ describe("EarlyAccessForm", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("confirms a new signup and states the discount", async () => {
+  it("confirms a new signup and states the offer the server recorded", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => respond(200, { status: "subscribed" })),
+      vi.fn(async () =>
+        respond(200, {
+          status: "subscribed",
+          offer: { percent: 75, basePriceCents: 2000 },
+        }),
+      ),
     );
-    render(<EarlyAccessForm placement="hero" />);
+    render(form("hero"));
 
     await submit("builder@example.com");
 
     expect(
       await screen.findByText(siteCopy.form.success.headline),
     ).toBeTruthy();
-    expect(screen.getByText(siteCopy.form.success.month)).toBeTruthy();
+    // The recorded offer, not the one on the page when the form was rendered.
+    expect(screen.getByText(fillOffer(siteCopy.offer.onList, 75))).toBeTruthy();
     expect(screen.queryByText(siteCopy.form.success.duplicate)).toBeNull();
   });
 
@@ -118,7 +130,7 @@ describe("EarlyAccessForm", () => {
       return respond(200, { status: "subscribed" });
     });
     vi.stubGlobal("fetch", fetchMock);
-    render(<EarlyAccessForm placement="earlyAccess" />);
+    render(form("earlyAccess"));
 
     await submit("builder@example.com");
 
@@ -135,7 +147,7 @@ describe("EarlyAccessForm", () => {
       "fetch",
       vi.fn(async () => respond(200, { status: "already_subscribed" })),
     );
-    render(<EarlyAccessForm placement="hero" />);
+    render(form("hero"));
 
     await submit("builder@example.com");
 
@@ -149,7 +161,7 @@ describe("EarlyAccessForm", () => {
       "fetch",
       vi.fn(async () => respond(500, { status: "error" })),
     );
-    render(<EarlyAccessForm placement="hero" />);
+    render(form("hero"));
 
     await submit("builder@example.com");
 
@@ -167,7 +179,7 @@ describe("EarlyAccessForm", () => {
       "fetch",
       vi.fn(async () => respond(503, { status: "unconfigured" })),
     );
-    render(<EarlyAccessForm placement="hero" />);
+    render(form("hero"));
 
     await submit("builder@example.com");
 
@@ -184,8 +196,8 @@ describe("EarlyAccessForm", () => {
     );
     render(
       <>
-        <EarlyAccessForm placement="hero" />
-        <EarlyAccessForm placement="earlyAccess" />
+        {form("hero")}
+        {form("earlyAccess")}
       </>,
     );
 
@@ -216,28 +228,61 @@ describe("EarlyAccessForm", () => {
     expect(screen.queryAllByRole("textbox")).toHaveLength(0);
   });
 
-  it("writes the answer to storage, so a reload can find it", async () => {
+  it("writes the answer and the locked offer to storage, so a reload can find them", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => respond(200, { status: "subscribed" })),
+      vi.fn(async () =>
+        respond(200, {
+          status: "subscribed",
+          offer: { percent: 75, basePriceCents: 2000 },
+        }),
+      ),
     );
-    render(<EarlyAccessForm placement="hero" />);
+    render(form("hero"));
 
     await submit("builder@example.com");
     await screen.findByText(siteCopy.form.success.headline);
 
     expect(window.localStorage.getItem("porcess.early-access")).toBe(
-      "subscribed",
+      JSON.stringify({
+        status: "subscribed",
+        offer: { percent: 75, basePriceCents: 2000 },
+      }),
     );
   });
 
   it("opens already answered for a visitor who has been here before", () => {
     // Seeded after the beforeEach clear, so this is what a returning visitor's
-    // browser looks like before the page has run a line of its own.
+    // browser looks like before the page has run a line of its own. The legacy
+    // plain string predates stored offers and must still count as answered.
     window.localStorage.setItem("porcess.early-access", "subscribed");
-    render(<EarlyAccessForm placement="hero" />);
+    render(form("hero"));
 
     expect(screen.queryByLabelText(siteCopy.form.label)).toBeNull();
     expect(screen.getByText(siteCopy.form.success.headline)).toBeTruthy();
+    // With no stored offer, the confirmation falls back to the live one rather
+    // than dropping the line.
+    expect(
+      screen.getByText(fillOffer(siteCopy.offer.onList, OFFER.percent)),
+    ).toBeTruthy();
+  });
+
+  it("repeats the stored offer even after the live offer changes", () => {
+    window.localStorage.setItem(
+      "porcess.early-access",
+      JSON.stringify({
+        status: "subscribed",
+        offer: { percent: 90, basePriceCents: 2000 },
+      }),
+    );
+    render(
+      <EarlyAccessForm
+        offer={{ percent: 50, basePriceCents: 2000 }}
+        placement="hero"
+      />,
+    );
+
+    expect(screen.getByText(fillOffer(siteCopy.offer.onList, 90))).toBeTruthy();
+    expect(screen.queryByText(fillOffer(siteCopy.offer.onList, 50))).toBeNull();
   });
 });

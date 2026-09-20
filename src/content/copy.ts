@@ -1,15 +1,15 @@
 /**
  * Every string the visitor can read. Keep product claims grounded in the
  * workflows currently represented by the frontend and backend.
+ *
+ * The discount is the one value that is not fixed here: it is the active offer
+ * (D-100), so anything that names it is produced by `offerText(percent)` at
+ * render time rather than stored as a literal. That keeps the page from ever
+ * contradicting the offer the signup actually locked in.
  */
+
 export const siteCopy = {
   brand: "Porcess",
-
-  offer: {
-    discount: "90% off",
-    short: "90% off",
-    combined: "90% off",
-  },
 
   nav: {
     label: "Primary",
@@ -22,7 +22,6 @@ export const siteCopy = {
     headline: "Build the thing. Let Porcess handle what comes next.",
     question: "Your product is only the beginning.",
     hook: "Porcess gives product teams focused agents for the work around building: content, marketing, search, and the next release.",
-    formNote: "Join the early list for 90% off.",
   },
 
   agents: [
@@ -95,15 +94,35 @@ export const siteCopy = {
     ],
   },
 
+  pricing: {
+    label: "EARLY ACCESS PRICING",
+    headline: "Lock in the launch price.",
+    body: "One price, set once. Everyone who joins during an offer keeps that offer after launch.",
+    standardLabel: "Standard",
+    perMonth: "/ month",
+    cta: "GET EARLY ACCESS",
+  },
+
+  /**
+   * Strings that name the discount. `{percent}` is replaced with the active
+   * offer at render time, so the page can never state a discount the signup did
+   * not lock in.
+   */
+  offer: {
+    nav: "{percent}% off",
+    heroNote: "Early birds get {percent}% off.",
+    onList: "You’re on the list for {percent}% off when Porcess launches.",
+  },
+
   earlyAccess: {
     headline: "Get in before the doors open.",
-    body: "Porcess is building the operating layer for the work around building. Join the early list for 90% off.",
+    body: "Porcess is building the operating layer for the work around building. Join the early list for {percent}% off.",
     benefitsLabel: "Early access includes:",
     benefits: [
       {
         number: "01",
-        title: "90% off",
-        body: "Porcess at 90% off when we launch.",
+        title: "{percent}% off",
+        body: "Porcess at {percent}% off when we launch.",
         scale: "primary" as const,
       },
       {
@@ -126,7 +145,6 @@ export const siteCopy = {
     placeholder: "you@example.com",
     submit: "GET EARLY ACCESS →",
     submitting: "GETTING YOU IN",
-    heroNote: "Early birds get 90% off.",
     idleHint: "No spam. Just one email when it’s time.",
     invalid: "That doesn’t look like an email address.",
     empty: "Enter your email address to join the early list.",
@@ -135,7 +153,6 @@ export const siteCopy = {
     success: {
       headline: "You’re in.",
       welcome: "Welcome to Porcess.",
-      month: "You’re on the list for 90% off when Porcess launches.",
       duplicate: "You were meant to be on the list.",
     },
   },
@@ -153,3 +170,14 @@ export const siteCopy = {
     ogAlt: "Porcess agents for the work after the work.",
   },
 } as const;
+
+/**
+ * Fills `{percent}` in an offer string.
+ *
+ * Plain replacement rather than a template engine: the only placeholder on the
+ * page is the discount, and `String.replace` with a fixed token cannot
+ * accidentally interpret anything else in the copy.
+ */
+export function fillOffer(template: string, percent: number): string {
+  return template.replaceAll("{percent}", String(percent));
+}

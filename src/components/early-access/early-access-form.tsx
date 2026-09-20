@@ -2,10 +2,11 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 
-import { siteCopy } from "@/content/copy";
+import { fillOffer, siteCopy } from "@/content/copy";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
 import { cn } from "@/lib/cn";
+import type { Offer } from "@/lib/offer/format";
 import { markSubscribed, useSignupStatus } from "@/lib/signup";
 import { LANDING_VERSION } from "@/lib/site";
 import { checkEmail } from "@/lib/validation";
@@ -14,20 +15,40 @@ import { checkEmail } from "@/lib/validation";
  * The only interactive element on the page.
  *
  * Used twice: opening the page and closing it. There is one tone, because the
- * page has one surface now that the closing slab is gone.
+ * page has one surface.
  *
  * The subscribed state lives in a module store rather than here, so the second
  * placement stops asking as soon as the first has been answered. The fields are
  * not merely disabled on success, they are gone: there is nothing left to fill
  * in anywhere on the page.
+ *
+ * The confirmation names the offer the server recorded for this signup, not the
+ * one the page happens to be showing. The two differ whenever the offer changes
+ * between a visitor arriving and a returning visitor reloading, and the visitor
+ * is only ever entitled to what they actually joined at.
  */
 
 type Phase = "idle" | "submitting";
 
+type OfferPayload = { percent: number; basePriceCents: number };
+
+function parseOffer(value: unknown): OfferPayload | null {
+  if (typeof value !== "object" || value === null) {
+    return null;
+  }
+  const candidate = value as { percent?: unknown; basePriceCents?: unknown };
+  return typeof candidate.percent === "number" &&
+    typeof candidate.basePriceCents === "number"
+    ? { percent: candidate.percent, basePriceCents: candidate.basePriceCents }
+    : null;
+}
+
 export function EarlyAccessForm({
+  offer,
   showPromise = false,
   placement,
 }: {
+  offer: Offer;
   showPromise?: boolean;
   placement: "hero" | "earlyAccess";
 }) {
@@ -100,17 +121,21 @@ export function EarlyAccessForm({
       });
 
       const payload: unknown = await response.json().catch(() => null);
-      const status =
+      const bodyObject =
         typeof payload === "object" && payload !== null
-          ? (payload as { status?: unknown }).status
-          : undefined;
+          ? (payload as Record<string, unknown>)
+          : null;
+      const status = bodyObject?.status;
 
       if (
         response.ok &&
         (status === "subscribed" || status === "already_subscribed")
       ) {
         actedRef.current = true;
-        markSubscribed(status);
+        markSubscribed({
+          status,
+          offer: parseOffer(bodyObject?.offer),
+        });
         track("email_submitted", {
           placement,
           duplicate: status === "already_subscribed",
@@ -139,6 +164,11 @@ export function EarlyAccessForm({
   // Anyone who has joined the list sees the confirmation, wherever the field
   // appears on the page. No input, no button, nothing still asking.
   if (signup !== null) {
+    // The offer recorded for this signup, or the live one when storage was
+    // unavailable or predates the offer. A zero discount is not an "0% off"
+    // claim, so the line is omitted rather than stated.
+    const confirmed = signup.offer ?? offer;
+
     return (
       <div data-early-access={placement}>
         <div
@@ -153,10 +183,12 @@ export function EarlyAccessForm({
             <p className="mt-2 text-sm text-ink-muted">
               {siteCopy.form.success.welcome}
             </p>
-            <p className="mt-4 text-sm text-ink-muted">
-              {siteCopy.form.success.month}
-            </p>
-            {signup === "already_subscribed" ? (
+            {confirmed.percent > 0 ? (
+              <p className="mt-4 text-sm text-ink-muted">
+                {fillOffer(siteCopy.offer.onList, confirmed.percent)}
+              </p>
+            ) : null}
+            {signup.status === "already_subscribed" ? (
               <p className="mt-4 text-sm text-ink-muted">
                 {siteCopy.form.success.duplicate}
               </p>
@@ -238,7 +270,9 @@ export function EarlyAccessForm({
       </p>
 
       {showPromise ? (
-        <p className="text-sm text-ink">{siteCopy.form.heroNote}</p>
+        <p className="text-sm text-ink">
+          {fillOffer(siteCopy.offer.heroNote, offer.percent)}
+        </p>
       ) : null}
     </form>
   );

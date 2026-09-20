@@ -6,8 +6,9 @@ import { AgentDeck } from "@/components/agents/agent-deck";
 import { EarlyAccessForm } from "@/components/early-access/early-access-form";
 import { Container } from "@/components/ui/section";
 import { siteCopy } from "@/content/copy";
+import type { Offer } from "@/lib/offer/format";
 
-export function ProductHero() {
+export function ProductHero({ offer }: { offer: Offer }) {
   return (
     <section className="product-hero" data-hero-ready="true" id="product-hero">
       <Container className="product-hero-inner">
@@ -41,7 +42,7 @@ export function ProductHero() {
             initial={false}
             transition={{ delay: 0.24, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <EarlyAccessForm placement="hero" showPromise />
+            <EarlyAccessForm offer={offer} placement="hero" showPromise />
           </motion.div>
         </div>
         <AgentDeck />

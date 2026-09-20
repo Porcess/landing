@@ -36,7 +36,10 @@ export default defineConfig({
     // the state a fresh deployment is actually in.
     env: {
       ...process.env,
-      DATABASE_URL: "",
+      // The default suite runs with no database at all. `E2E_DATABASE_URL` is an
+      // opt-in for the one spec that has to write to a database to prove the
+      // offer is editable; it must point at a disposable one.
+      DATABASE_URL: process.env.E2E_DATABASE_URL ?? "",
       // The dashboard has to be reachable for its own tests, and the value has
       // to be knowable by them, so the server and the specs share one default.
       STATS_PASSWORD: process.env.STATS_PASSWORD ?? "test-password",

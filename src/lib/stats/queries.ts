@@ -348,6 +348,9 @@ export type SignupRow = {
   utmSource: string | null;
   utmCampaign: string | null;
   landingPageVersion: string;
+  /** The offer this address locked in, snapshotted at signup. */
+  offerPercent: number;
+  basePriceCents: number;
 };
 
 export async function recentSignups(limit: number): Promise<SignupRow[]> {
@@ -357,9 +360,40 @@ export async function recentSignups(limit: number): Promise<SignupRow[]> {
             referrer,
             utm_source as "utmSource",
             utm_campaign as "utmCampaign",
-            landing_page_version as "landingPageVersion"
+            landing_page_version as "landingPageVersion",
+            offer_percent as "offerPercent",
+            base_price_cents as "basePriceCents"
      from early_access_signups
      order by created_at desc
+     limit $1::int`,
+    [limit],
+  );
+}
+
+export type OfferChange = {
+  percent: number;
+  basePriceCents: number;
+  previousPercent: number | null;
+  previousBasePriceCents: number | null;
+  changedAt: Date;
+};
+
+/**
+ * What the offer used to be, newest first.
+ *
+ * Read straight from the append-only table rather than reconstructed from
+ * signups: the history is the record of the decision, and a signup is only the
+ * record of one person's consequence of it.
+ */
+export async function offerHistory(limit: number): Promise<OfferChange[]> {
+  return query<OfferChange>(
+    `select percent,
+            base_price_cents as "basePriceCents",
+            previous_percent as "previousPercent",
+            previous_base_price_cents as "previousBasePriceCents",
+            changed_at as "changedAt"
+     from offer_history
+     order by changed_at desc
      limit $1::int`,
     [limit],
   );

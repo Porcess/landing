@@ -5,7 +5,7 @@ import { useMotionValueEvent, useScroll } from "motion/react";
 import { useState } from "react";
 
 import { Container } from "@/components/ui/section";
-import { siteCopy } from "@/content/copy";
+import { fillOffer, siteCopy } from "@/content/copy";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/cn";
 import { SECTION } from "@/lib/site";
@@ -22,7 +22,7 @@ import { SECTION } from "@/lib/site";
  * The scrolled state is driven by Motion's scroll value rather than a raw
  * `scroll` listener, and only the boolean crossing re-renders.
  */
-export function SiteNav() {
+export function SiteNav({ offerPercent }: { offerPercent: number }) {
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
 
@@ -56,7 +56,7 @@ export function SiteNav() {
               scrolled ? "opacity-100" : "opacity-0",
             )}
           >
-            {siteCopy.offer.short}
+            {fillOffer(siteCopy.offer.nav, offerPercent)}
           </span>
 
           <a

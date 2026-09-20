@@ -52,6 +52,9 @@ type ForwardedSignup = {
   createdAt: string;
   landingPageVersion: string;
   attribution: Attribution;
+  /** The offer this signup locked in, so the list carries the same promise the
+   * visitor saw. */
+  offer: { percent: number; basePriceCents: number };
 };
 
 /**
@@ -161,7 +164,9 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (result.status === "already_subscribed") {
-    return respond("already_subscribed", 200);
+    // The offer that address already locked in, so the confirmation repeats it
+    // rather than the offer live right now.
+    return respond("already_subscribed", 200, { offer: result.offer });
   }
 
   // Identifier only. The address itself never reaches a log line.
@@ -173,9 +178,10 @@ export async function POST(request: Request): Promise<Response> {
     createdAt: new Date().toISOString(),
     landingPageVersion: LANDING_VERSION,
     attribution,
+    offer: result.offer,
   });
 
-  return respond("subscribed", 200);
+  return respond("subscribed", 200, { offer: result.offer });
 }
 
 export function GET(): Response {

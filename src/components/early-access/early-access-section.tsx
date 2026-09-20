@@ -1,8 +1,9 @@
 import { ViewEvent } from "@/components/analytics/view-event";
 import { EarlyAccessForm } from "@/components/early-access/early-access-form";
 import { Container, Section } from "@/components/ui/section";
-import { siteCopy } from "@/content/copy";
+import { fillOffer, siteCopy } from "@/content/copy";
 import { cn } from "@/lib/cn";
+import type { Offer } from "@/lib/offer/format";
 import { SECTION } from "@/lib/site";
 
 /**
@@ -10,9 +11,10 @@ import { SECTION } from "@/lib/site";
  *
  * The offer and the form come first, and the benefits follow as a plain
  * numbered list with a single hairline per row, so nothing competes with the
- * field. The discount carries the weight because it is the only offer.
+ * field. The discount carries the weight because it is the only offer, and it
+ * is rendered from the active offer rather than written here.
  */
-export function EarlyAccessSection() {
+export function EarlyAccessSection({ offer }: { offer: Offer }) {
   return (
     <Section id={SECTION.earlyAccess} labelledBy="early-access-label">
       <ViewEvent
@@ -27,11 +29,11 @@ export function EarlyAccessSection() {
           {siteCopy.earlyAccess.headline}
         </h2>
         <p className="mt-6 max-w-measure text-lead text-ink-muted">
-          {siteCopy.earlyAccess.body}
+          {fillOffer(siteCopy.earlyAccess.body, offer.percent)}
         </p>
 
         <div className="mt-10 max-w-xl sm:mt-12">
-          <EarlyAccessForm placement="earlyAccess" />
+          <EarlyAccessForm offer={offer} placement="earlyAccess" />
         </div>
 
         <div className="mt-16 sm:mt-24">
@@ -63,11 +65,11 @@ export function EarlyAccessSection() {
                       benefit.scale === "normal" && "text-lg",
                     )}
                   >
-                    {benefit.title}
+                    {fillOffer(benefit.title, offer.percent)}
                   </span>
                 </dt>
                 <dd className="max-w-measure text-sm text-ink-muted sm:col-span-6 sm:col-start-7">
-                  {benefit.body}
+                  {fillOffer(benefit.body, offer.percent)}
                 </dd>
               </div>
             ))}

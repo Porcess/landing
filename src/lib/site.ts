@@ -34,6 +34,7 @@ export const SECTION = {
   earlyAccess: "early-access",
   agents: "agents",
   howItWorks: "how-it-works",
+  pricing: "pricing",
 } as const;
 
 /**

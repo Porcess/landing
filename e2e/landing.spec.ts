@@ -21,6 +21,13 @@ test.describe("product landing", () => {
     await expect(page.getByText("SEO", { exact: true })).toBeVisible();
     await expect(page.locator("#how-it-works")).toBeVisible();
 
+    // With no database, the pricing section shows the launch offer: 90% off the
+    // $20 base, so $2 a month.
+    await expect(page.locator("#pricing")).toBeVisible();
+    await expect(page.locator("#pricing").getByText("90% off")).toBeVisible();
+    await expect(page.locator(".pricing-amount")).toContainText("$2");
+    await expect(page.locator(".pricing-strike")).toHaveText("$20");
+
     await page.screenshot({
       path: `${SHOTS}/product-landing.png`,
       fullPage: true,

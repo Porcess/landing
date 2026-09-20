@@ -6,6 +6,13 @@ import type { ReactNode } from "react";
 
 import { Container } from "@/components/ui/section";
 import {
+  discountLabel,
+  formatUsd,
+  offerPriceCents,
+  type Offer,
+} from "@/lib/offer/format";
+import { getActiveOffer } from "@/lib/offer/settings";
+import {
   formatNumber,
   formatProperties,
   formatUtc,
@@ -26,6 +33,7 @@ import {
   failuresByReason,
   funnel,
   health,
+  offerHistory,
   parseRange,
   rangeLabel,
   RANGES,
@@ -37,6 +45,7 @@ import {
   summarise,
   type Breakdown,
   type FunnelStep,
+  type OfferChange,
   type Range,
   type TrendPoint,
 } from "@/lib/stats/queries";
@@ -63,7 +72,7 @@ export const metadata: Metadata = {
 export default async function StatsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string; e?: string }>;
+  searchParams: Promise<{ range?: string; e?: string; offer?: string }>;
 }) {
   // An unconfigured deployment does not admit that this page exists.
   if (statsDisabled()) {
@@ -97,6 +106,8 @@ export default async function StatsPage({
     signups,
     tail,
     status,
+    activeOffer,
+    history,
   ] = await Promise.all([
     summarise(filter).catch(() => null),
     series(filter, range, now).catch(() => []),
@@ -111,6 +122,8 @@ export default async function StatsPage({
     recentSignups(25).catch(() => []),
     recentEvents(20).catch(() => []),
     health(),
+    getActiveOffer(),
+    offerHistory(10).catch(() => []),
   ]);
 
   return (
@@ -163,6 +176,16 @@ export default async function StatsPage({
         </header>
 
         <Health status={status} now={now} />
+
+        {status.configured && status.reachable ? (
+          <Block title="Offer">
+            <OfferControl
+              history={history}
+              notice={params.offer}
+              offer={activeOffer}
+            />
+          </Block>
+        ) : null}
 
         {!status.configured ? (
           <p
@@ -612,6 +635,7 @@ function Signups({ rows }: { rows: SignupRow[] }) {
           <tr className="border-y border-hairline text-left">
             <Th>Email</Th>
             <Th>When</Th>
+            <Th>Offer</Th>
             <Th>Source</Th>
             <Th>Campaign</Th>
             <Th>Referrer</Th>
@@ -628,6 +652,15 @@ function Signups({ rows }: { rows: SignupRow[] }) {
               </td>
               <td className="py-3 pr-4 font-mono text-xs whitespace-nowrap text-ink-muted">
                 {formatUtc(row.createdAt)}
+              </td>
+              <td className="py-3 pr-4 font-mono text-xs whitespace-nowrap text-ink-muted">
+                {discountLabel(row.offerPercent)}{" "}
+                {formatUsd(
+                  offerPriceCents({
+                    percent: row.offerPercent,
+                    basePriceCents: row.basePriceCents,
+                  }),
+                )}
               </td>
               <td className="py-3 pr-4 text-ink-muted">
                 {row.utmSource ?? "direct"}
@@ -689,5 +722,143 @@ function Th({ children }: { children: ReactNode }) {
     >
       {children}
     </th>
+  );
+}
+
+/** The message for an offer write, or null when there is nothing to say. */
+function offerNotice(notice: string | undefined): string | null {
+  switch (notice) {
+    case "saved":
+      return "Offer saved. New signups lock in this offer.";
+    case "invalid":
+      return "That offer was not valid. The discount is 0 to 99 and the base price is a positive number of cents.";
+    case "unconfigured":
+      return "No database is configured, so the offer could not be saved.";
+    case "failed":
+      return "The offer could not be saved. Nothing changed.";
+    default:
+      return null;
+  }
+}
+
+/**
+ * The one place the offer is changed.
+ *
+ * A plain form post, so it works without scripting and cannot be triggered by a
+ * cross-site request. The history below it is read-only and append-only: it is
+ * what lets an operator see the sequence of offers without trusting the page
+ * they happened to be looking at when each change was made.
+ */
+function OfferControl({
+  offer,
+  history,
+  notice,
+}: {
+  offer: Offer;
+  history: OfferChange[];
+  notice?: string;
+}) {
+  const message = offerNotice(notice);
+
+  return (
+    <div>
+      {message === null ? null : (
+        <p
+          className={
+            notice === "saved" ? "text-sm text-ink" : "text-sm text-danger"
+          }
+          {...(notice === "saved" ? {} : { role: "alert" as const })}
+        >
+          {message}
+        </p>
+      )}
+
+      <p className="mt-1 font-display text-2xl font-semibold text-ink">
+        {discountLabel(offer.percent)} · {formatUsd(offerPriceCents(offer))}
+      </p>
+      <p className="mt-1 text-sm text-ink-muted">
+        {formatUsd(offerPriceCents(offer))} of {formatUsd(offer.basePriceCents)}{" "}
+        list price
+      </p>
+
+      <form
+        action={`${STATS_PATH}/offer`}
+        className="mt-6 flex flex-wrap items-end gap-4"
+        method="post"
+      >
+        <label className="flex flex-col gap-2">
+          <span className="font-mono text-xs tracking-label text-ink-muted uppercase">
+            Discount percent
+          </span>
+          <input
+            className="focus-ring h-10 w-28 rounded-xs border border-hairline-strong bg-ground-raised px-3 text-sm text-ink tabular-nums"
+            defaultValue={offer.percent}
+            inputMode="numeric"
+            name="percent"
+            pattern="[0-9]{1,2}"
+            required
+          />
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <span className="font-mono text-xs tracking-label text-ink-muted uppercase">
+            Base price, cents
+          </span>
+          <input
+            className="focus-ring h-10 w-40 rounded-xs border border-hairline-strong bg-ground-raised px-3 text-sm text-ink tabular-nums"
+            defaultValue={offer.basePriceCents}
+            inputMode="numeric"
+            name="basePriceCents"
+            pattern="[0-9]{1,6}"
+            required
+          />
+        </label>
+
+        <button
+          className="focus-ring h-10 rounded-xs bg-ink px-5 font-mono text-xs tracking-label text-ground uppercase transition-colors duration-150 hover:bg-ink-muted"
+          type="submit"
+        >
+          Save offer
+        </button>
+      </form>
+
+      <p className="mt-3 text-xs text-ink-muted">
+        The base price is in cents, so $20 is 2000. Signups lock in whatever is
+        active when they join; existing signups are never rewritten.
+      </p>
+
+      <div className="mt-8">
+        <p className="font-mono text-xs tracking-label text-ink-muted uppercase">
+          History
+        </p>
+        {history.length === 0 ? (
+          <p className="mt-3 border-t border-hairline pt-3 text-sm text-ink-muted">
+            No offer changes recorded yet.
+          </p>
+        ) : (
+          <ul className="mt-1">
+            {history.map((change) => (
+              <li
+                className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-t border-hairline py-2 last:border-b"
+                key={`${change.changedAt.toISOString()}-${String(change.percent)}-${String(change.basePriceCents)}`}
+              >
+                <span className="font-display text-sm font-medium text-ink">
+                  {discountLabel(change.percent)} ·{" "}
+                  {formatUsd(offerPriceCents(change))}
+                </span>
+                <span className="font-mono text-xs text-ink-muted">
+                  {change.previousPercent === null
+                    ? "initial"
+                    : `was ${discountLabel(change.previousPercent)}`}
+                </span>
+                <span className="ml-auto font-mono text-xs text-ink-muted">
+                  {formatUtc(change.changedAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }

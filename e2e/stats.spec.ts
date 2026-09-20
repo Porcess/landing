@@ -159,6 +159,11 @@ test.describe("the dashboard", () => {
     );
     // No fabricated figures anywhere.
     await expect(page.getByText("Page views")).toHaveCount(0);
+    // And no offer form that could not be saved: the block only appears once
+    // there is a database to write to.
+    await expect(page.getByRole("button", { name: "Save offer" })).toHaveCount(
+      0,
+    );
   });
 
   test("renders the sign in form without accessibility violations", async ({
