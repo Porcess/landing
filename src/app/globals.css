@@ -362,7 +362,7 @@ body {
   color: var(--color-ink);
   padding-top: 6.5rem;
   /* One source for the deck's height, so the peek is a known fraction of a card. */
-  --agent-card-height: clamp(17.5rem, 28.5vw, 24rem);
+  --agent-card-height: clamp(22.75rem, 37vw, 31rem);
 }
 
 /* The diagonal. The dark half is the top-left triangle; the page behind it is
@@ -1339,7 +1339,7 @@ body {
 @media (max-width: 767px) {
   .product-hero {
     padding-top: 4.5rem;
-    --agent-card-height: 15.5rem;
+    --agent-card-height: 20rem;
   }
   /* A corner-to-corner diagonal leaves a wedge too thin to hold the copy at this
      width, so the split becomes a flat band: dark on top, light below. */
