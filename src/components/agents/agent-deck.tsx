@@ -17,11 +17,15 @@ const colors = [
 /**
  * The agent deck.
  *
- * Each card is the whole agent: identity at the top, one piece of artwork in the
- * middle, and the detail and studio at the bottom. The deck sits on the hero's
- * bottom edge as full cards and is wider than the viewport, so the outermost
- * cards bleed past it; the diagonal seam passes through the Clips card, which is
- * what ties the deck to the split behind it.
+ * Each card is the whole agent: a kind pill in the top-right corner, the agent's
+ * name, and one piece of artwork that fills the rest of the card and bleeds to its
+ * edges. There is nothing in the card below the artwork: everything the card needs
+ * to say is on the artwork or above it, so the card reads as a portrait rather than
+ * as a clipped paragraph with an illustration.
+ *
+ * The deck sits on the hero's bottom edge as full cards and is wider than the
+ * viewport, so the outermost cards bleed past it; the diagonal seam passes through
+ * the Clips card, which is what ties the deck to the split behind it.
  */
 export function AgentDeck() {
   const reduced = useReducedMotion();
@@ -50,12 +54,10 @@ export function AgentDeck() {
           <div className="agent-card-top">
             <span className="agent-card-label">{agent.label}</span>
             <h2 className="agent-card-title">{agent.title}</h2>
-            <p className="agent-card-desc">{agent.description}</p>
           </div>
 
           <AgentArt kind={agent.id} />
 
-          <p className="agent-card-detail">{agent.detail}</p>
           <p className="agent-card-studio">{agent.studio}</p>
         </motion.article>
       ))}
