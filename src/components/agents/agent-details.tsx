@@ -23,7 +23,6 @@ export function AgentDetails() {
             <article key={agent.id}>
               <span>{agent.studio}</span>
               <h3>{agent.name}</h3>
-              <p>{agent.detail}</p>
             </article>
           ))}
         </div>
