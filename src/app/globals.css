@@ -356,12 +356,15 @@ body {
 
 .product-hero {
   position: relative;
-  min-height: 100dvh;
+  /* Tall enough that the top 40% of the deck is inside the first viewport and the
+     remaining 60% sits below the fold, still inside the hero and fully visible
+     when the reader scrolls. Nothing is clipped. */
+  min-height: calc(100dvh + var(--agent-card-height) * 0.6 + 1.5rem);
   overflow: hidden;
   background: var(--color-ground);
   color: var(--color-ink);
   padding-top: 6.5rem;
-  /* One source for the deck's height, so the peek is a known fraction of a card. */
+  /* One source for the deck's height, so every position derived from it agrees. */
   --agent-card-height: clamp(22.75rem, 37vw, 31rem);
 }
 
@@ -478,8 +481,8 @@ body {
    through, so the deck is the bridge between the dark half and the light one. */
 .agent-deck {
   position: absolute;
-  /* Lifted off the very edge by enough to absorb the corner overhang of the
-     rotated cards, so no card is clipped at the bottom. */
+  /* The deck sits just above the bottom edge as full cards; the hero's own
+     min-height is what puts only the top of them inside the first viewport. */
   bottom: 1.5rem;
   left: 50%;
   z-index: 2;
@@ -498,7 +501,7 @@ body {
 .agent-card {
   position: relative;
   display: flex;
-  width: clamp(17rem, 23.4vw, 22rem);
+  width: clamp(20rem, 28vw, 25rem);
   height: var(--agent-card-height);
   flex: 0 0 auto;
   flex-direction: column;
@@ -533,7 +536,11 @@ body {
   z-index: 2;
 }
 
+/* The label sits on the top lane, flush right, so the lane reads as a header
+   rule with the agent's kind on the far side of it. */
 .agent-card-label {
+  display: block;
+  text-align: right;
   font-family: var(--font-mono);
   font-size: 0.625rem;
   letter-spacing: 0.16em;
@@ -542,10 +549,10 @@ body {
 
 .agent-card-title {
   margin: 0.75rem 0 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 2.2vw, 2.1rem);
-  font-weight: 650;
-  letter-spacing: -0.06em;
+  font-family: var(--font-space-grotesk), var(--font-display);
+  font-size: clamp(1.7rem, 2.4vw, 2.35rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
   line-height: 0.95;
 }
 
@@ -1340,6 +1347,7 @@ body {
   .product-hero {
     padding-top: 4.5rem;
     --agent-card-height: 20rem;
+    min-height: calc(100dvh + var(--agent-card-height) * 0.6 + 1.5rem);
   }
   /* A corner-to-corner diagonal leaves a wedge too thin to hold the copy at this
      width, so the split becomes a flat band: dark on top, light below. */
@@ -1385,11 +1393,11 @@ body {
     transform: none;
   }
   .agent-card {
-    width: 15rem;
+    width: 17rem;
     height: var(--agent-card-height);
   }
   .agent-card h2 {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
   }
   .product-section-intro {
     display: block;

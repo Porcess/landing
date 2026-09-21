@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { SessionStart } from "@/components/analytics/session-start";
@@ -18,6 +18,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
   display: "swap",
+});
+
+/**
+ * The display face for the agent cards. Geist carries the body copy; the cards
+ * get a face with more character so the deck reads as the product's own
+ * furniture rather than as more body type. It is the same family the product
+ * application uses for display headings, so the two surfaces agree.
+ */
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+  weight: ["500", "600", "700"],
 });
 
 /**
@@ -72,7 +85,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <html className={`${geistSans.variable} ${geistMono.variable}`} lang="en">
+    <html
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}
+      lang="en"
+    >
       <body className="font-sans">
         <a className="skip-link" href="#main-content">
           Skip to content
