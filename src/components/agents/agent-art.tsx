@@ -1,51 +1,63 @@
 import type { ReactNode } from "react";
 
+const WAVE = [40, 72, 55, 88, 34, 66, 92, 48, 74, 38, 60, 84];
+const SCENES = ["Hook", "Context", "Example", "Payoff"];
+
 type AgentArtProps = { kind: "clips" | "shorts" | "marketing" | "seo" };
 
-const bars = [18, 34, 24, 44, 28, 40, 22, 52, 30, 46, 26, 38, 20, 32];
-
+/**
+ * The artwork in the middle of an agent card.
+ *
+ * One composition per agent, drawn only with shapes and `currentColor`, so every
+ * piece inherits the card's ink and the same markup reads on all four card
+ * colors. The whole composition is decorative: the card's own label, title,
+ * description, detail, and studio carry the meaning, so the art is hidden from
+ * assistive technology and its small labels are not read out as content. Motion
+ * lives in the stylesheet and every animation has a still state that reads on its
+ * own.
+ */
 function ClipsArt() {
   return (
-    <div className="agent-art agent-art-clips" aria-hidden="true">
-      <div className="art-window art-video-window">
-        <div className="art-window-bar">
-          <span />
-          <span />
-          <span />
-          <b>01:42:18</b>
+    <>
+      <div className="art-window">
+        <div className="art-bar">
+          <i />
+          <i />
+          <i />
+          <b>source.mp4</b>
         </div>
-        <div className="art-video-frame">
-          <div className="art-video-subject" />
-          <div className="art-video-caption">a moment worth keeping</div>
+        <div className="art-frame">
+          <div className="art-subject" />
+          <div className="art-caption">00:14:02 · keynote</div>
         </div>
-        <div className="art-waveform">
-          {bars.map((height, index) => (
+        <div className="art-wave">
+          {WAVE.map((height, index) => (
             <i key={index} style={{ height: `${height}%` }} />
           ))}
           <em />
         </div>
       </div>
-      <div className="art-clip-stack">
-        <span className="art-clip-card art-clip-card-back" />
-        <span className="art-clip-card art-clip-card-middle" />
-        <span className="art-clip-card art-clip-card-front">
-          <b>00:32</b>
+      <div className="art-stack">
+        <span className="art-clip art-clip-back" />
+        <span className="art-clip art-clip-mid" />
+        <span className="art-clip art-clip-front">
+          <b>0:24</b>
           <i />
         </span>
       </div>
-    </div>
+    </>
   );
 }
 
 function ShortsArt() {
   return (
-    <div className="agent-art agent-art-shorts" aria-hidden="true">
-      <div className="art-topic-pill">
+    <>
+      <div className="art-pill">
         <span />
-        <b>one idea</b>
+        topic · onboarding
       </div>
-      <div className="art-scene-list">
-        {["HOOK", "CONTEXT", "TURN", "CLOSE"].map((label, index) => (
+      <div className="art-scenes">
+        {SCENES.map((label, index) => (
           <div className="art-scene" key={label}>
             <small>0{index + 1}</small>
             <span>{label}</span>
@@ -53,85 +65,102 @@ function ShortsArt() {
           </div>
         ))}
       </div>
-      <div className="art-short-preview">
+      <div className="art-short">
         <div className="art-short-sky" />
-        <div className="art-short-copy">make the next move</div>
-        <div className="art-play">▶</div>
-        <div className="art-short-progress" />
+        <div className="art-short-copy">
+          Ship the idea, not the spreadsheet.
+        </div>
+        <span className="art-play">▶</span>
+        <div className="art-short-bar" />
       </div>
-    </div>
+    </>
   );
 }
 
 function MarketingArt() {
   return (
-    <div className="agent-art agent-art-marketing" aria-hidden="true">
+    <>
       <div className="art-browser">
-        <div className="art-window-bar">
-          <span />
-          <span />
-          <span />
-          <b>company context</b>
+        <div className="art-bar">
+          <i />
+          <i />
+          <i />
+          <b>positioning</b>
         </div>
-        <div className="art-browser-line art-browser-line-strong" />
-        <div className="art-browser-line" />
-        <div className="art-browser-line art-browser-line-short" />
-        <div className="art-browser-scan" />
+        <div className="art-line art-line-strong" />
+        <div className="art-line" />
+        <div className="art-line art-line-short" />
+        <div className="art-line" />
+        <div className="art-scan" />
       </div>
-      <div className="art-knowledge-map">
-        <i className="art-map-node art-map-node-main" />
-        <i className="art-map-node art-map-node-one" />
-        <i className="art-map-node art-map-node-two" />
-        <i className="art-map-node art-map-node-three" />
-        <i className="art-map-edge art-map-edge-one" />
-        <i className="art-map-edge art-map-edge-two" />
-        <i className="art-map-edge art-map-edge-three" />
+      <div className="art-map">
+        <span className="art-edge art-edge-1" />
+        <span className="art-edge art-edge-2" />
+        <span className="art-edge art-edge-3" />
+        <span className="art-node art-node-main" />
+        <span className="art-node art-node-1" />
+        <span className="art-node art-node-2" />
+        <span className="art-node art-node-3" />
       </div>
-      <div className="art-strategy-note">
-        <span>POSITIONING</span>
-        <b>what the company knows</b>
-        <i />
-      </div>
-    </div>
+    </>
   );
 }
 
 function SeoArt() {
   return (
-    <div className="agent-art agent-art-seo" aria-hidden="true">
-      <div className="art-search-results">
+    <>
+      <div className="art-search">
         <div className="art-search-bar">
-          <span>your product</span>
-          <b>⌕</b>
+          <span>site:your-product.com</span>
+          <b>↵</b>
         </div>
-        {["/product", "/guide", "/compare", "/pricing"].map((path, index) => (
-          <div
-            className={`art-search-row ${index === 2 ? "is-issue" : ""}`}
-            key={path}
-          >
-            <small>{index + 1}</small>
-            <span>
-              <b>{path}</b>
-              <i />
-            </span>
-            {index === 2 ? <em /> : null}
-          </div>
-        ))}
+        <div className="art-row">
+          <small>01</small>
+          <span>
+            <b>/pricing</b>
+            <i />
+          </span>
+        </div>
+        <div className="art-row is-issue">
+          <small>02</small>
+          <span>
+            <b>/docs/start</b>
+            <i />
+          </span>
+          <em />
+        </div>
+        <div className="art-row">
+          <small>03</small>
+          <span>
+            <b>/changelog</b>
+            <i />
+          </span>
+        </div>
       </div>
-      <div className="art-ranking-chart">
-        <span>ORGANIC POSITION</span>
-        <svg viewBox="0 0 180 100" role="presentation">
-          <path d="M4 86 C30 80 38 72 61 75 S90 52 111 58 S143 25 176 12" />
+      <div className="art-chart">
+        <span>Visibility</span>
+        <svg preserveAspectRatio="none" viewBox="0 0 120 90">
+          <path d="M4 78 C 34 74, 44 52, 62 44 S 96 20, 116 12" />
         </svg>
         <b>↑</b>
       </div>
-    </div>
+    </>
   );
 }
 
-export function AgentArt({ kind }: AgentArtProps): ReactNode {
-  if (kind === "clips") return <ClipsArt />;
-  if (kind === "shorts") return <ShortsArt />;
-  if (kind === "marketing") return <MarketingArt />;
-  return <SeoArt />;
+const ART: Record<AgentArtProps["kind"], () => ReactNode> = {
+  clips: ClipsArt,
+  shorts: ShortsArt,
+  marketing: MarketingArt,
+  seo: SeoArt,
+};
+
+export function AgentArt({ kind }: AgentArtProps) {
+  const Art = ART[kind];
+
+  return (
+    <div aria-hidden="true" className="agent-card-art" data-art={kind}>
+      <Art />
+    </div>
+  );
 }

@@ -18,9 +18,13 @@ export const siteCopy = {
   },
 
   hero: {
-    eyebrow: "THE WORK AFTER THE WORK",
-    headline: "Build the thing. Let Porcess handle what comes next.",
-    question: "Your product is only the beginning.",
+    /**
+     * The eyebrow and the word are one sentence, read together: TRUST THE
+     * PROCESS, which the scan line settles as TRUST THE PORCESS. The spoken
+     * heading is the settled reading, stated once for assistive technology.
+     */
+    eyebrow: "TRUST THE",
+    headline: "Trust the Porcess",
     hook: "Porcess gives product teams focused agents for the work around building: content, marketing, search, and the next release.",
   },
 

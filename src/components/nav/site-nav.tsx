@@ -37,7 +37,7 @@ export function SiteNav({ offerPercent }: { offerPercent: number }) {
         "fixed inset-x-0 top-0 z-50 border-b transition-colors duration-200",
         scrolled
           ? "border-hairline bg-ground/80 backdrop-blur-md"
-          : "border-transparent",
+          : "nav-on-dark border-transparent",
       )}
     >
       <Container className="flex h-14 items-center justify-between gap-6 sm:h-16">

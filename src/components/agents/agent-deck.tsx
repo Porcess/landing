@@ -14,6 +14,15 @@ const colors = [
   "agent-card-coral",
 ];
 
+/**
+ * The agent deck.
+ *
+ * Each card is the whole agent: identity at the top, one piece of artwork in the
+ * middle, and the detail and studio at the bottom. The deck sits on the hero's
+ * bottom edge as full cards and is wider than the viewport, so the outermost
+ * cards bleed past it; the diagonal seam passes through the Clips card, which is
+ * what ties the deck to the split behind it.
+ */
 export function AgentDeck() {
   const reduced = useReducedMotion();
 
@@ -26,6 +35,7 @@ export function AgentDeck() {
     >
       {siteCopy.agents.map((agent, index) => (
         <motion.article
+          animate={{ opacity: 1, y: 0, rotate: rotations[index] }}
           className={`agent-card ${colors[index]}`}
           initial={false}
           key={agent.id}
@@ -36,14 +46,17 @@ export function AgentDeck() {
             ease: [0.16, 1, 0.3, 1],
           }}
           whileHover={reduced ? undefined : { y: -16, rotate: 0, scale: 1.025 }}
-          animate={{ opacity: 1, y: 0, rotate: rotations[index] }}
         >
-          <div className="agent-card-copy">
+          <div className="agent-card-top">
             <span className="agent-card-label">{agent.label}</span>
-            <h2>{agent.title}</h2>
-            <p>{agent.description}</p>
+            <h2 className="agent-card-title">{agent.title}</h2>
+            <p className="agent-card-desc">{agent.description}</p>
           </div>
+
           <AgentArt kind={agent.id} />
+
+          <p className="agent-card-detail">{agent.detail}</p>
+          <p className="agent-card-studio">{agent.studio}</p>
         </motion.article>
       ))}
     </div>

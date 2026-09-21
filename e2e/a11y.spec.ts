@@ -32,11 +32,23 @@ function format(entries: AxeEntries): string {
 }
 
 /** WCAG contrast for a text node against its nearest opaque ancestor. */
-async function contrastRatio(page: Page, selector: string): Promise<number> {
+/**
+ * WCAG contrast for a text node against its nearest opaque ancestor.
+ *
+ * The background can be forced. The hero's dark half is a clipped layer behind
+ * the copy rather than an ancestor of it, so the ancestor walk would resolve the
+ * page's light ground and report a light-on-light ratio for a word that is
+ * actually light-on-dark.
+ */
+async function contrastRatio(
+  page: Page,
+  selector: string,
+  forcedBackground?: string,
+): Promise<number> {
   return page
     .locator(selector)
     .first()
-    .evaluate((node) => {
+    .evaluate((node, background) => {
       const channels = (value: string): [number, number, number] => {
         const parts = (value.match(/[\d.]+/g) ?? []).map(Number);
         return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];
@@ -51,21 +63,26 @@ async function contrastRatio(page: Page, selector: string): Promise<number> {
 
       const foreground = luminance(channels(getComputedStyle(node).color));
 
-      let background = 0;
-      let current: Element | null = node;
-      while (current !== null) {
-        const value = getComputedStyle(current).backgroundColor;
-        if (value !== "rgba(0, 0, 0, 0)" && value !== "transparent") {
-          background = luminance(channels(value));
-          break;
+      let backgroundLuminance: number;
+      if (typeof background === "string" && background.length > 0) {
+        backgroundLuminance = luminance(channels(background));
+      } else {
+        backgroundLuminance = 0;
+        let current: Element | null = node;
+        while (current !== null) {
+          const value = getComputedStyle(current).backgroundColor;
+          if (value !== "rgba(0, 0, 0, 0)" && value !== "transparent") {
+            backgroundLuminance = luminance(channels(value));
+            break;
+          }
+          current = current.parentElement;
         }
-        current = current.parentElement;
       }
 
-      const lighter = Math.max(foreground, background);
-      const darker = Math.min(foreground, background);
+      const lighter = Math.max(foreground, backgroundLuminance);
+      const darker = Math.min(foreground, backgroundLuminance);
       return (lighter + 0.05) / (darker + 0.05);
-    });
+    }, forcedBackground ?? null);
 }
 
 async function audit(page: Page) {
@@ -89,12 +106,12 @@ test.describe("accessibility", () => {
       ),
     ).toBe("");
 
-    expect(await contrastRatio(page, ".product-hero-heading")).toBeGreaterThan(
-      7,
-    );
-    expect(await contrastRatio(page, ".product-hero-lede")).toBeGreaterThan(
-      4.5,
-    );
+    expect(
+      await contrastRatio(page, "[data-word]", "rgb(12, 12, 11)"),
+    ).toBeGreaterThan(7);
+    expect(
+      await contrastRatio(page, ".product-hero-lede", "rgb(12, 12, 11)"),
+    ).toBeGreaterThan(4.5);
   });
 
   test("the landing page is clean at 375", async ({ page }) => {

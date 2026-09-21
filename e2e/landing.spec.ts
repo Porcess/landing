@@ -10,10 +10,12 @@ test.describe("product landing", () => {
 
     await expect(page.locator('[data-hero-ready="true"]')).toBeAttached();
     await expect(
-      page.getByRole("heading", {
-        name: "Build the thing. Let Porcess handle what comes next.",
-      }),
+      page.getByRole("heading", { name: "Trust the Porcess" }),
     ).toBeVisible();
+    // The brand word is present as the animated word, not just as the heading.
+    await expect(page.locator("[data-word]")).toBeVisible();
+    await expect(page.locator(".hero-seam-light")).toBeAttached();
+    await expect(page.locator(".hero-seam-dark")).toBeAttached();
     await expect(page.locator(".agent-card")).toHaveCount(4);
     await expect(page.getByText("Clips", { exact: true })).toBeVisible();
     await expect(page.getByText("Shorts", { exact: true })).toBeVisible();
