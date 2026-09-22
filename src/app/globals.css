@@ -143,96 +143,6 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   Hero
-   ---------------------------------------------------------------------------
-   The word is seven seats. Five hold a single glyph; the two the line crosses
-   hold the letter they show and the letter arriving, stacked in the same cell.
-
-   The arriving letter is revealed by a horizontal clip that tracks the line, so
-   the seam between the old letter and the new one is exactly where the line is.
-   That is the whole trick: the line does not merely pass while the letters
-   change somewhere near it, the line is the edge that changes them, and the
-   change is a hard cut rather than a fade. Nothing is ever drawn at partial
-   opacity, so there is no moment where two glyphs are composited into a third
-   shape that is neither letter.
-
-   Both glyphs sit in the same cell, so the seat is as wide as the wider of the
-   two and the word's box is identical before, during and after the change.
-   Nothing reflows. */
-.hero-word {
-  position: relative;
-  isolation: isolate;
-  display: inline-flex;
-  line-height: 1;
-  font-family: var(--font-display);
-  /* Sized for the dark triangle, not for the full width: the form beneath it has
-     to stay on the same side of the seam. */
-  font-size: clamp(2.5rem, 7.4vw, 5.5rem);
-  font-weight: 650;
-  letter-spacing: -0.05em;
-  color: inherit;
-}
-
-.hero-seat {
-  display: inline-grid;
-  height: 1em;
-  overflow: hidden;
-}
-
-.hero-glyph {
-  /* Both glyphs occupy the same cell. The arriving one is later in the document
-     order, so it paints over the one it is replacing. */
-  grid-area: 1 / 1;
-  display: block;
-  height: 1em;
-  line-height: 1em;
-  text-align: center;
-}
-
-/* The carrier for the line. It is exactly as wide as the word, so a percentage
-   translation on it is a percentage of the word, and its left edge is the point
-   the line crosses. Nothing may wrap the line itself: an opacity or transform on
-   an ancestor would isolate its blending and it would vanish over a stroke. */
-.hero-sweep {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  pointer-events: none;
-}
-
-/* The scan line: a thin bright rule that crosses the word, with its ends faded
-   so it reads as a line rather than a bar.
-
-   Drawn with difference blending on purpose. A plain white line disappears the
-   moment it meets a white stroke, which defeats the entire idea of a line that
-   passes over the letters and changes them: it would only ever be visible in the
-   gaps between glyphs. Inverting whatever is behind it keeps one continuous line
-   across the whole word, appearing near-white over the ground and near-black over
-   a glyph. No glow, no colour, just the inversion.
-
-   There was briefly a translucent wash trailing it. Over a near-black ground a
-   wide semi-transparent band reads as a grey rectangle parked next to the line,
-   not as a trail, so the line carries the effect alone. */
-.hero-line {
-  position: absolute;
-  top: -0.06em;
-  bottom: -0.06em;
-  left: 0;
-  width: 2px;
-  background-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    var(--color-ink) 10%,
-    var(--color-ink) 90%,
-    transparent 100%
-  );
-  mix-blend-mode: difference;
-  opacity: 0;
-}
-
-/* ---------------------------------------------------------------------------
    Diagram status
    --------------------------------------------------------------------------- */
 
@@ -371,18 +281,11 @@ body {
      with the card instead of being pinned to a fixed size. */
   --agent-card-width: clamp(15.5rem, 21.5vw, 37.5rem);
   --agent-card-height: clamp(30rem, 60vh, 46rem);
-  /* The diagonal starts below the masthead rather than at the top-right corner,
-     so the whole top band stays on the dark half and the nav never straddles the
-     seam. */
-  --hero-masthead-band: 5rem;
 }
 
-/* The diagonal. The dark half is the top-left triangle; the page behind it is
-   the light half. The dark layer is clipped rather than the content, so neither
-   the copy nor the cards can ever be cut by the seam.
-   The layer is exactly the first viewport tall rather than the whole hero, so
-   the seam runs corner to corner of the opening screen while the full cards
-   continue below it. */
+/* The hero is one light surface. The split layer remains only as the box the
+   hero measures against across the first viewport; the dark half and the
+   diagonal seam it used to carry are gone, so nothing is drawn here. */
 .hero-split {
   position: absolute;
   top: 0;
@@ -393,60 +296,12 @@ body {
   pointer-events: none;
 }
 
-.hero-split-dark {
-  position: absolute;
-  inset: 0;
-  background: #0c0c0b;
-  /* Full-width dark down to the masthead band, then the diagonal to the
-     bottom-left corner. */
-  clip-path: polygon(0 0, 100% 0, 100% var(--hero-masthead-band), 0 100%);
-}
 
-/* The seam. Each copy of the rule is clipped to its own half and colored for it:
-   a light rule over the dark triangle, a dark rule over the light one. */
-.hero-seam {
-  position: absolute;
-  /* Drawn only below the masthead band, matching the diagonal's new start. */
-  top: var(--hero-masthead-band);
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
-
-.hero-seam line {
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-  opacity: 0.7;
-}
-
-.hero-seam-light {
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-}
-
-.hero-seam-light line {
-  stroke: #f4f4f2;
-}
-
-.hero-seam-dark {
-  clip-path: polygon(0 100%, 100% 100%, 100% 0);
-}
-
-.hero-seam-dark line {
-  stroke: #111311;
-}
-
-/* The flat seam is the narrow-screen fallback, shown by the media query below. */
-.hero-seam-flat {
-  display: none;
-}
 
 /* The masthead is the old fixed nav, moved into the hero once the bar went
-   away: brand on the left, offer and anchors on the right. It sits across the
-   diagonal, so it reads through difference blending for the same reason as the
-   seam: near-white over the dark triangle, near-dark over the light sliver by
-   the top-right corner. A fixed color would vanish on one half or the other. */
+   away: brand on the left, offer and anchors on the right. The hero is a single
+   light surface now, so it reads in the page's own ink. */
 .hero-masthead {
-  --color-ink: #f4f4f2;
   position: relative;
   z-index: 3;
   display: flex;
@@ -460,11 +315,10 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding-top: 1.25rem;
+  padding-top: clamp(1.75rem, 4vh, 3rem);
   padding-right: clamp(1rem, 2.5vw, 3rem);
   padding-left: clamp(1rem, 2.5vw, 3rem);
-  color: #f4f4f2;
-  mix-blend-mode: difference;
+  color: var(--color-ink);
 }
 
 .hero-masthead-brand {
@@ -474,7 +328,7 @@ body {
   color: inherit;
   font-family: var(--font-display);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: var(--tracking-eyebrow);
   text-decoration: none;
   text-transform: uppercase;
@@ -493,26 +347,27 @@ body {
 }
 
 .hero-masthead-offer {
+  color: var(--color-ink-muted);
   font-family: var(--font-mono);
   font-size: var(--text-micro);
+  font-weight: 700;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
-  opacity: 0.65;
 }
 
 .hero-masthead-link {
-  color: inherit;
+  color: var(--color-ink-muted);
   font-family: var(--font-mono);
   font-size: 0.75rem;
+  font-weight: 700;
   letter-spacing: var(--tracking-label);
   text-decoration: none;
   text-transform: uppercase;
-  opacity: 0.65;
-  transition: opacity 150ms;
+  transition: color 150ms;
 }
 
 .hero-masthead-link:hover {
-  opacity: 1;
+  color: var(--color-ink);
 }
 
 @media (max-width: 639px) {
@@ -522,23 +377,16 @@ body {
   }
 }
 
-/* The dark half sets its own tokens, so every control inside it inverts on its
-   own: text and muted text turn light, hairlines darken, the input sits on a dark
-   raised surface, and the primary button becomes a light button on dark. The
-   cards sit outside this scope and keep the light palette. */
+/* The hero copy column. It keeps the page's light palette: dark ink, the muted
+   step for secondary lines, and the ordinary dark button, the same as every
+   other surface. */
 .hero-dark-zone {
-  --color-ink: #f4f4f2;
-  --color-ground: #0c0c0b;
-  --color-ground-raised: #141413;
-  --color-ink-muted: #9a9a97;
-  --color-hairline: #2a2a28;
-  --color-hairline-strong: #3d3d3a;
-  --color-danger: #ff6b57;
   position: relative;
   z-index: 1;
-  max-width: 34rem;
+  /* Wide enough that the heading lines and the one-line lede stay on one line
+     each on a desktop measure. */
+  max-width: 56rem;
   padding-top: clamp(1rem, 4vh, 3rem);
-  color: #f4f4f2;
 }
 
 .product-hero-inner {
@@ -551,15 +399,40 @@ body {
   padding-bottom: calc(var(--agent-card-height) + 1.5rem);
 }
 
-.hero-word-wrap {
-  margin-top: 0.75rem;
+/* The pitch: a name line in the display face, set large, with a smaller
+   qualifier beneath it in the body face. The lede under both says what the
+   agents actually do. */
+.product-hero-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.product-hero-headline-main {
+  font-family: var(--font-space-grotesk), var(--font-display);
+  font-size: clamp(2.75rem, 6.4vw, 5.25rem);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+  /* The name is one line; the mobile rule below scales it to fit rather than
+     letting it break. */
+  white-space: nowrap;
+}
+
+.product-hero-headline-sub {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
 }
 
 .product-hero-lede {
-  max-width: 32rem;
-  margin-top: 1.5rem;
-  color: var(--color-ink-muted);
-  font-size: clamp(1rem, 1.3vw, 1.2rem);
+  max-width: none;
+  margin-top: 1.25rem;
+  color: var(--color-ink);
+  font-size: clamp(1rem, 1.1vw, 1.15rem);
   line-height: 1.45;
 }
 
@@ -1635,26 +1508,6 @@ body {
     padding-right: 1.5rem;
     padding-left: 1.5rem;
   }
-  /* A corner-to-corner diagonal leaves a wedge too thin to hold the copy at this
-     width, so the split becomes a flat band: dark down to the card peek, light
-     below it. Both edges are tied to the peek size rather than a percentage,
-     so the seam always lands just above the cards on any height. */
-  .hero-split-dark {
-    clip-path: inset(0 0 calc(var(--agent-card-height) * 0.65) 0);
-  }
-  .hero-seam {
-    display: none;
-  }
-  .hero-seam-flat {
-    position: absolute;
-    top: calc(100% - (var(--agent-card-height) * 0.65));
-    right: 0;
-    left: 0;
-    display: block;
-    height: 1px;
-    background: #8b8b88;
-    opacity: 0.7;
-  }
   .product-hero-inner {
     padding-right: 0;
     padding-left: 0;
@@ -1663,6 +1516,10 @@ body {
   .hero-dark-zone {
     max-width: none;
     padding: 1.25rem 1.5rem 0;
+  }
+  .product-hero-headline-main {
+    /* Scaled to keep the name on one line inside the narrow gutter. */
+    font-size: clamp(1.9rem, 8.5vw, 2.6rem);
   }
   .product-hero-lede {
     max-width: 26rem;

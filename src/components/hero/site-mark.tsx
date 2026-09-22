@@ -2,7 +2,7 @@
  * The site mark in the masthead lockup, beside the brand.
  *
  * The same two-square motif as the app icon, drawn with `currentColor` instead
- * of fixed strokes so it inherits the masthead's difference-blended white.
+ * of fixed strokes so it inherits the masthead's ink.
  * Decorative: the brand link already names Porcess for assistive technology.
  */
 export function SiteMark({ className }: { className?: string }) {

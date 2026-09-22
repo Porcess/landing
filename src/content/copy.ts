@@ -19,13 +19,12 @@ export const siteCopy = {
 
   hero: {
     /**
-     * The eyebrow and the word are one sentence, read together: TRUST THE
-     * PROCESS, which the scan line settles as TRUST THE PORCESS. The spoken
-     * heading is the settled reading, stated once for assistive technology.
+     * The pitch is two lines read as one sentence, and the hook beneath it says
+     * what the agents actually do. Both are stated once, in plain text.
      */
-    eyebrow: "TRUST THE",
-    headline: "Trust the Porcess",
-    hook: "Porcess gives product teams focused agents for the work around building: content, marketing, search, and the next release.",
+    headline: "Tailored Agents",
+    headlineTail: "For Every Workflow",
+    hook: "Focused AI agents for content, marketing, search, testing, and your next release.",
   },
 
   agents: [

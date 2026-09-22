@@ -118,10 +118,10 @@ test.describe("accessibility", () => {
     ).toBe("");
 
     expect(
-      await contrastRatio(page, "[data-word]", "rgb(12, 12, 11)"),
+      await contrastRatio(page, ".product-hero-headline", "rgb(246, 244, 238)"),
     ).toBeGreaterThan(7);
     expect(
-      await contrastRatio(page, ".product-hero-lede", "rgb(12, 12, 11)"),
+      await contrastRatio(page, ".product-hero-lede", "rgb(246, 244, 238)"),
     ).toBeGreaterThan(4.5);
   });
 

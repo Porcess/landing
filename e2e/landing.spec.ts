@@ -10,12 +10,10 @@ test.describe("product landing", () => {
 
     await expect(page.locator('[data-hero-ready="true"]')).toBeAttached();
     await expect(
-      page.getByRole("heading", { name: "Trust the Porcess" }),
+      page.getByRole("heading", {
+        name: "Tailored Agents For Every Workflow",
+      }),
     ).toBeVisible();
-    // The brand word is present as the animated word, not just as the heading.
-    await expect(page.locator("[data-word]")).toBeVisible();
-    await expect(page.locator(".hero-seam-light")).toBeAttached();
-    await expect(page.locator(".hero-seam-dark")).toBeAttached();
     // The fixed nav moved into the hero: brand, offer, and anchors ride in the
     // masthead, the site mark sits alongside the title, and no fixed header
     // remains.
