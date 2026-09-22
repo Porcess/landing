@@ -33,11 +33,12 @@ test.describe("product landing", () => {
     ).toHaveAttribute("href", "#early-access");
     await expect(page.locator(".hero-masthead-mark")).toBeVisible();
     await expect(page.locator("header")).toHaveCount(0);
-    await expect(page.locator(".agent-card")).toHaveCount(4);
+    await expect(page.locator(".agent-card")).toHaveCount(5);
     await expect(page.getByText("Clips", { exact: true })).toBeVisible();
     await expect(page.getByText("Shorts", { exact: true })).toBeVisible();
     await expect(page.getByText("Marketing", { exact: true })).toBeVisible();
     await expect(page.getByText("SEO", { exact: true })).toBeVisible();
+    await expect(page.getByText("Testing", { exact: true })).toBeVisible();
     await expect(page.locator("#how-it-works")).toBeVisible();
 
     // With no database, the pricing section shows the launch offer: 90% off the
@@ -140,7 +141,7 @@ test.describe("product landing", () => {
       page,
     }) => {
       await page.goto("/");
-      await expect(page.locator(".agent-card")).toHaveCount(4);
+      await expect(page.locator(".agent-card")).toHaveCount(5);
       const animations = await page
         .locator(".agent-card")
         .evaluateAll((cards) =>

@@ -2,8 +2,11 @@ import type { ReactNode } from "react";
 
 const WAVE = [40, 72, 55, 88, 34, 66, 92, 48, 74, 38, 60, 84];
 const SCENES = ["Hook", "Context", "Example", "Payoff"];
+const CHECKS = ["Opens the page", "Fills the form", "Sees the result"];
 
-type AgentArtProps = { kind: "clips" | "shorts" | "marketing" | "seo" };
+type AgentArtProps = {
+  kind: "clips" | "shorts" | "marketing" | "seo" | "testing";
+};
 
 /**
  * The artwork in the middle of an agent card.
@@ -148,11 +151,48 @@ function SeoArt() {
   );
 }
 
+function TestingArt() {
+  return (
+    <>
+      <div className="art-preview">
+        <div className="art-bar">
+          <i />
+          <i />
+          <i />
+          <b>pr #482</b>
+        </div>
+        <div className="art-preview-body">
+          <span className="art-ghost art-ghost-wide" />
+          <span className="art-ghost" />
+          <span className="art-ghost art-ghost-short" />
+          <span className="art-cursor" />
+        </div>
+      </div>
+      <div className="art-checks">
+        {CHECKS.map((label, index) => (
+          <div
+            className={`art-check${index === CHECKS.length - 1 ? " is-run" : ""}`}
+            key={label}
+          >
+            <span className="art-check-box" />
+            {label}
+          </div>
+        ))}
+      </div>
+      <div className="art-verdict">
+        <b>✓</b>
+        passed
+      </div>
+    </>
+  );
+}
+
 const ART: Record<AgentArtProps["kind"], () => ReactNode> = {
   clips: ClipsArt,
   shorts: ShortsArt,
   marketing: MarketingArt,
   seo: SeoArt,
+  testing: TestingArt,
 };
 
 export function AgentArt({ kind }: AgentArtProps) {

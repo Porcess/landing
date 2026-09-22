@@ -6,22 +6,21 @@ import { siteCopy } from "@/content/copy";
 
 import { AgentArt } from "./agent-art";
 
-const rotations = [-5, -1.5, 2.5, 6];
+const rotations = [-6, -3, 0, 3, 6];
 const colors = [
   "agent-card-rose",
   "agent-card-teal",
   "agent-card-sage",
   "agent-card-coral",
+  "agent-card-ink",
 ];
 
 /**
  * The agent deck.
  *
  * Each card is the whole agent: a kind pill in the top-right corner, the agent's
- * name, and one piece of artwork that fills the rest of the card and bleeds to its
- * edges. There is nothing in the card below the artwork: everything the card needs
- * to say is on the artwork or above it, so the card reads as a portrait rather than
- * as a clipped paragraph with an illustration.
+ * name, one concise line naming what it does, and one piece of artwork below. The
+ * card reads as a portrait: name, purpose, then the composition.
  *
  * The deck sits on the hero's bottom edge as full cards and is wider than the
  * viewport, so the outermost cards bleed past it; the diagonal seam passes through
@@ -54,6 +53,7 @@ export function AgentDeck() {
           <div className="agent-card-top">
             <span className="agent-card-label">{agent.label}</span>
             <h2 className="agent-card-title">{agent.title}</h2>
+            <p className="agent-card-desc">{agent.description}</p>
           </div>
 
           <AgentArt kind={agent.id} />

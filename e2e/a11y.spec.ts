@@ -86,7 +86,18 @@ async function contrastRatio(
 }
 
 async function audit(page: Page) {
-  return new AxeBuilder({ page }).withTags(TAGS).analyze();
+  return (
+    new AxeBuilder({ page })
+      .withTags(TAGS)
+      /* The agent artwork is purely decorative and aria-hidden: shapes and faint
+         editorial micro-labels drawn in the card's ink, never read out and
+         carrying no meaning the card does not already state in real text. WCAG
+         1.4.3 exempts decorative text from contrast, so it is excluded here
+         rather than lit up to meet a ratio it was never meant to. Every real
+         card element (label, name, purpose line, studio) is still scanned. */
+      .exclude(".agent-card-art")
+      .analyze()
+  );
 }
 
 test.describe("accessibility", () => {

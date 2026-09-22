@@ -364,15 +364,17 @@ body {
   overflow: hidden;
   background: var(--color-ground);
   color: var(--color-ink);
-  /* One source for the deck's height, so every position derived from it agrees.
-     Derived from the card's width, not from the viewport height: the cards are
-     laid out side by side, so their width already tracks the viewport, and a
-     height tied to that width keeps the artwork in the middle of each card the
-     wide proportion it was drawn for. Letting the card grow taller instead
-     stretched every animated composition inside it into a tall sliver, because
-     those compositions size their shapes as percentages of this box. The 0.62
-     factor lands the artwork near 1.45:1 at every width. */
-  --agent-card-height: calc(7.5rem + 0.62 * clamp(20rem, 28vw, 25rem));
+  /* Two sources, both derived from the card's width rather than the viewport
+     height, so every position agrees and the artwork keeps the wide proportion
+     it was drawn for.
+       - The art box is pinned to its own height (the 0.62 factor lands it near
+         1.45:1 at every width) and sits at the bottom of the card, so growing
+         the card can never stretch the animated compositions inside it.
+       - The card is a full quarter taller than the art needs. The extra height
+         becomes air between the name and the artwork, which restores the
+         portrait silhouette without touching the artwork itself. */
+  --agent-card-art-height: calc(1.31rem + 0.62 * clamp(20rem, 28vw, 25rem));
+  --agent-card-height: clamp(28rem, 50vh, 40rem);
 }
 
 /* The diagonal. The dark half is the top-left triangle; the page behind it is
@@ -567,7 +569,7 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(0.25rem, 1.1vw, 1rem);
+  gap: 0;
   min-width: max-content;
   padding: 0 1rem;
   transform: translateX(-50%);
@@ -594,6 +596,23 @@ body {
   transform-origin: 50% 100%;
 }
 
+/* The cards overlap into a fan rather than sitting in a row: each one after the
+   first pulls left across its neighbour, and the deck rotates them around their
+   bottom edge (transform-origin: 50% 100%) so the tops splay apart while the
+   bottoms tuck together. The overlap lands at the bottoms, where only artwork
+   meets, so every card's corner tag, name, purpose line, and studio chip stay
+   clear of the card stacked on top of it. Later cards paint over earlier ones,
+   so the deck reads left-to-right like a dealt hand. */
+.agent-card + .agent-card {
+  margin-left: calc(clamp(20rem, 28vw, 25rem) * -0.33);
+}
+
+/* On hover a card lifts and straightens; bring it above its neighbours so the
+   raised card is never tucked under the one dealt after it. */
+.agent-card:hover {
+  z-index: 4;
+}
+
 .agent-card-rose {
   background: #bd9ea9;
 }
@@ -609,6 +628,11 @@ body {
 
 .agent-card-coral {
   background: #df744c;
+}
+
+.agent-card-ink {
+  background: #0c0c0b;
+  color: #f4f4f2;
 }
 
 .agent-card-top {
@@ -641,6 +665,11 @@ body {
   background: rgb(245 246 240 / 0.12);
 }
 
+.agent-card-ink .agent-card-label,
+.agent-card-ink .agent-card-studio {
+  background: rgb(245 246 240 / 0.1);
+}
+
 .agent-card-title {
   margin: 0;
   font-family: var(--font-space-grotesk), var(--font-display);
@@ -650,29 +679,38 @@ body {
   line-height: 1.05;
 }
 
+/* One concise line under the name: what the agent does, in the card's own ink.
+   It reads as the card's purpose rather than a paragraph, so it stays to a
+   single line and leans on the card color for tone. */
+.agent-card-desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
+}
+
 .agent-card-art {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 8rem;
+  /* Pinned height, kept in place directly under the name. A taller card grows
+     the space below it, never the artwork and never its position. */
+  flex: 0 0 auto;
+  height: var(--agent-card-art-height);
+  /* Inset from the sides so the artwork stays contained rather than bleeding to
+     the card edge. The gap matches the corner tag's own inset (right: 1.25rem),
+     so the artwork lines up with where the tag ends. */
   margin-top: 0.5rem;
+  margin-inline: 1.25rem;
   overflow: hidden;
   isolation: isolate;
 }
 
-.agent-card-art::after {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgb(17 19 17 / 0.08) 100%
-  );
-  content: "";
-}
-
 .agent-card-teal .agent-card-art {
   color: #f5f6f0;
+}
+
+.agent-card-ink .agent-card-art {
+  color: #f4f4f2;
 }
 
 .agent-card-rose .agent-card-art,
@@ -1178,6 +1216,111 @@ body {
   animation: card-chart 4.4s ease-out infinite;
 }
 
+/* Testing: a preview of the change on the left, a checklist walking through it on
+   the right, and a verdict chip. A cursor tracks across the preview and the last
+   step pulses to read as "running"; both settle into a still, legible state. */
+.art-preview {
+  position: absolute;
+  top: 8%;
+  left: 4%;
+  width: 52%;
+  height: 66%;
+  border: 1px solid currentColor;
+  border-radius: 0.3rem;
+  background: rgb(255 255 255 / 0.14);
+  overflow: hidden;
+}
+
+.art-preview-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0.55rem;
+}
+
+.art-ghost {
+  height: 0.32rem;
+  width: 60%;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.3;
+}
+
+.art-ghost-wide {
+  width: 82%;
+  opacity: 0.5;
+}
+
+.art-ghost-short {
+  width: 40%;
+}
+
+.art-cursor {
+  position: absolute;
+  right: 22%;
+  bottom: 18%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(-45deg);
+  animation: card-cursor 4.2s ease-in-out infinite;
+}
+
+.art-checks {
+  position: absolute;
+  top: 16%;
+  right: 4%;
+  width: 38%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.46rem;
+}
+
+.art-check {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0.85;
+}
+
+.art-check-box {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1px solid currentColor;
+  border-radius: 0.12rem;
+  background: currentColor;
+}
+
+.art-check.is-run .art-check-box {
+  background: transparent;
+  animation: card-check 2.6s ease-in-out infinite;
+}
+
+.art-verdict {
+  position: absolute;
+  right: 6%;
+  bottom: 8%;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.art-verdict b {
+  font-size: 0.55rem;
+}
+
 .product-section-intro {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.65fr);
@@ -1413,6 +1556,27 @@ body {
   }
 }
 
+@keyframes card-cursor {
+  0%,
+  100% {
+    transform: rotate(-45deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(-45deg) translate(-120%, -90%);
+  }
+}
+
+@keyframes card-check {
+  0%,
+  55% {
+    background: transparent;
+  }
+  70%,
+  100% {
+    background: currentColor;
+  }
+}
+
 /* Every animated piece of artwork has a still state that reads on its own, so the
    preference only removes travel. */
 @media (prefers-reduced-motion: reduce) {
@@ -1422,7 +1586,9 @@ body {
   .art-wave em,
   .art-node-main,
   .art-row.is-issue,
-  .art-chart path {
+  .art-chart path,
+  .art-cursor,
+  .art-check.is-run .art-check-box {
     animation: none !important;
   }
 }
@@ -1430,9 +1596,10 @@ body {
 @media (max-width: 767px) {
   .product-hero {
     /* Same derivation as the wide layout, using the mobile card's own width
-       (17rem). The top block is shorter here (smaller title), so the constant
-       shrinks by the same amount to keep the artwork's wide proportion. */
-    --agent-card-height: calc(6.5rem + 0.62 * 17rem);
+       (17rem). The art box keeps its wide proportion; the card is a quarter
+       taller than the art needs so the extra height becomes air above it. */
+    --agent-card-art-height: calc(1.7rem + 0.62 * 17rem);
+    --agent-card-height: calc(8.125rem + 0.775 * 17rem);
   }
   .hero-masthead {
     padding-right: 1.5rem;
@@ -1482,6 +1649,9 @@ body {
     padding: 0 1.5rem;
     transform: none;
   }
+  .agent-card + .agent-card {
+    margin-left: 0;
+  }
   .agent-card {
     width: 17rem;
     height: var(--agent-card-height);
@@ -1494,6 +1664,9 @@ body {
     top: 1rem;
     right: 1rem;
     font-size: 0.5625rem;
+  }
+  .agent-card-art {
+    margin-inline: 1rem;
   }
   .agent-card h2 {
     font-size: 1.6rem;

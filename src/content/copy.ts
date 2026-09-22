@@ -34,7 +34,7 @@ export const siteCopy = {
       label: "CLIP SELECTION",
       title: "Clips",
       name: "Clips AI Agent",
-      description: "Create video shorts and highlight clips.",
+      description: "Cut long videos into short clips.",
       detail:
         "Find the moments worth keeping, then turn long-form video into short-form content.",
       studio: "Creator Studio",
@@ -44,7 +44,7 @@ export const siteCopy = {
       label: "SHORTS BUILDER",
       title: "Shorts",
       name: "Shorts Builder",
-      description: "Turn a topic into an editable narrated short.",
+      description: "Turn a topic into a narrated short.",
       detail:
         "Move from one idea to a structured script, scenes, captions, and narration.",
       studio: "Creator Studio",
@@ -54,7 +54,7 @@ export const siteCopy = {
       label: "FOUNDER-LED MARKETING",
       title: "Marketing",
       name: "Marketing AI Agent",
-      description: "Turn company knowledge into grounded marketing.",
+      description: "Turn what you know into marketing.",
       detail:
         "Research your company, organize what it knows, and turn that context into useful marketing work.",
       studio: "Growth Studio",
@@ -64,10 +64,20 @@ export const siteCopy = {
       label: "SEARCH OPPORTUNITIES",
       title: "SEO",
       name: "SEO AI Agent",
-      description: "Turn search opportunities into organic growth.",
+      description: "Turn search gaps into organic growth.",
       detail:
         "Audit your search presence, identify what matters, and leave a clear path to improvement.",
       studio: "Growth Studio",
+    },
+    {
+      id: "testing",
+      label: "FEATURE TESTING",
+      title: "Testing",
+      name: "Feature Testing Agent",
+      description: "Test a pull request like a real user.",
+      detail:
+        "Exercise a change the way a real user would, then report what passed, what broke, and where.",
+      studio: "Release Studio",
     },
   ],
 

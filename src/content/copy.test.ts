@@ -128,6 +128,7 @@ describe("the product copy stays grounded", () => {
       "shorts",
       "marketing",
       "seo",
+      "testing",
     ]);
     expect(siteCopy.howItWorks.steps).toHaveLength(4);
   });
