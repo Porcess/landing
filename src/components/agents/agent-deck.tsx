@@ -53,7 +53,10 @@ export function AgentDeck() {
               ? undefined
               : {
                   y: -16,
-                  rotate: 0,
+                  /* Only part of the way back toward upright: the card keeps its
+                     tilt and leans slightly the other way rather than snapping
+                     straight. */
+                  rotate: rotations[index] * 0.6,
                   scale: 1.025,
                   /* The staggered entrance delay must not carry into hover: the
                      card lifts the moment the pointer is over it. */

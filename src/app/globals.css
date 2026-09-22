@@ -442,11 +442,19 @@ body {
   position: relative;
   z-index: 3;
   display: flex;
+  /* The one bar that is not held to the page measure: it breaks out of the
+     centered container to the full width of the screen, so the brand sits at the
+     left edge and the offer and anchors at the right. Everything else on the page
+     keeps the measure. */
+  width: 100vw;
   min-height: 3.5rem;
+  margin-left: calc(50% - 50vw);
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
   padding-top: 1.25rem;
+  padding-right: clamp(1rem, 2.5vw, 3rem);
+  padding-left: clamp(1rem, 2.5vw, 3rem);
   color: #f4f4f2;
   mix-blend-mode: difference;
 }
@@ -618,7 +626,7 @@ body {
 .agent-card:hover {
   z-index: 4;
   border-color: color-mix(in srgb, var(--card-accent) 55%, #ffffff);
-  box-shadow: 0 1.75rem 3.5rem rgb(17 19 17 / 0.3);
+  box-shadow: 0 0.625rem 1.25rem rgb(17 19 17 / 0.24);
 }
 
 .agent-card-rose {
