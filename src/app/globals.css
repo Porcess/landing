@@ -371,6 +371,10 @@ body {
      with the card instead of being pinned to a fixed size. */
   --agent-card-width: clamp(15.5rem, 21.5vw, 37.5rem);
   --agent-card-height: clamp(30rem, 60vh, 46rem);
+  /* The diagonal starts below the masthead rather than at the top-right corner,
+     so the whole top band stays on the dark half and the nav never straddles the
+     seam. */
+  --hero-masthead-band: 5rem;
 }
 
 /* The diagonal. The dark half is the top-left triangle; the page behind it is
@@ -393,16 +397,20 @@ body {
   position: absolute;
   inset: 0;
   background: #0c0c0b;
-  clip-path: polygon(0 0, 100% 0, 0 100%);
+  /* Full-width dark down to the masthead band, then the diagonal to the
+     bottom-left corner. */
+  clip-path: polygon(0 0, 100% 0, 100% var(--hero-masthead-band), 0 100%);
 }
 
 /* The seam. Each copy of the rule is clipped to its own half and colored for it:
    a light rule over the dark triangle, a dark rule over the light one. */
 .hero-seam {
   position: absolute;
-  inset: 0;
-  height: 100%;
-  width: 100%;
+  /* Drawn only below the masthead band, matching the diagonal's new start. */
+  top: var(--hero-masthead-band);
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
 .hero-seam line {
