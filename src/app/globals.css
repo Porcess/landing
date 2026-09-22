@@ -384,9 +384,10 @@ body {
   position: relative;
   z-index: 1;
   /* Wide enough that the heading lines and the one-line lede stay on one line
-     each on a desktop measure. */
-  max-width: 56rem;
-  padding-top: clamp(1rem, 4vh, 3rem);
+     each on a desktop measure. The top padding scales with the viewport height
+     so the copy sits lower, closer to the cards, on taller screens. */
+  max-width: 62rem;
+  padding-top: clamp(1.5rem, 8vh, 7rem);
 }
 
 .product-hero-inner {
@@ -422,10 +423,11 @@ body {
 
 .product-hero-headline-sub {
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+  /* One step under the name, not a caption: the two lines read as one heading. */
+  font-size: clamp(2.35rem, 5.4vw, 4.5rem);
   font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
 }
 
 .product-hero-lede {
@@ -1520,6 +1522,9 @@ body {
   .product-hero-headline-main {
     /* Scaled to keep the name on one line inside the narrow gutter. */
     font-size: clamp(1.9rem, 8.5vw, 2.6rem);
+  }
+  .product-hero-headline-sub {
+    font-size: clamp(1.2rem, 5.6vw, 1.7rem);
   }
   .product-hero-lede {
     max-width: 26rem;

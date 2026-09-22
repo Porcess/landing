@@ -11,7 +11,7 @@ test.describe("product landing", () => {
     await expect(page.locator('[data-hero-ready="true"]')).toBeAttached();
     await expect(
       page.getByRole("heading", {
-        name: "Tailored Agents For Every Workflow",
+        name: "Tailored Agents For each of your workflows",
       }),
     ).toBeVisible();
     // The fixed nav moved into the hero: brand, offer, and anchors ride in the
