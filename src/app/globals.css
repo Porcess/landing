@@ -80,9 +80,10 @@
 }
 
 html {
-  /* Anchor jumps from the nav must clear the sticky header. Smooth scrolling is
-     opt-in so reduced motion users get an instant jump. */
-  scroll-padding-top: 5rem;
+  /* Anchor jumps from the hero masthead land with air. There is no fixed
+     header to clear. Smooth scrolling is opt-in so reduced motion users get an
+     instant jump. */
+  scroll-padding-top: 1rem;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -356,26 +357,37 @@ body {
 
 .product-hero {
   position: relative;
-  /* Tall enough that the top 40% of the deck is inside the first viewport and the
-     remaining 60% sits below the fold, still inside the hero and fully visible
-     when the reader scrolls. Nothing is clipped. */
+  /* Taller than the viewport so the deck fits in full: the top 40% of the cards
+     is inside the first screen and scrolling reveals the rest. Nothing is
+     clipped. */
   min-height: calc(100dvh + var(--agent-card-height) * 0.6 + 1.5rem);
   overflow: hidden;
   background: var(--color-ground);
   color: var(--color-ink);
-  padding-top: 6.5rem;
   /* One source for the deck's height, so every position derived from it agrees.
-     The ratio is close to the reference portrait card, so the composition above
-     the artwork keeps its air as the card grows. */
-  --agent-card-height: clamp(24rem, 41vw, 34rem);
+     Derived from the card's width, not from the viewport height: the cards are
+     laid out side by side, so their width already tracks the viewport, and a
+     height tied to that width keeps the artwork in the middle of each card the
+     wide proportion it was drawn for. Letting the card grow taller instead
+     stretched every animated composition inside it into a tall sliver, because
+     those compositions size their shapes as percentages of this box. The 0.62
+     factor lands the artwork near 1.45:1 at every width. */
+  --agent-card-height: calc(7.5rem + 0.62 * clamp(20rem, 28vw, 25rem));
 }
 
 /* The diagonal. The dark half is the top-left triangle; the page behind it is
    the light half. The dark layer is clipped rather than the content, so neither
-   the copy nor the cards can ever be cut by the seam. */
+   the copy nor the cards can ever be cut by the seam.
+   The layer is exactly the first viewport tall rather than the whole hero, so
+   the seam runs corner to corner of the opening screen while the full cards
+   continue below it. */
 .hero-split {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 100vh;
+  height: 100dvh;
   pointer-events: none;
 }
 
@@ -422,15 +434,78 @@ body {
   display: none;
 }
 
-/* The fixed nav sits over the dark half before the first scroll, so it takes the
-   same token overrides as the hero's dark zone. Once scrolled past the hero it
-   drops the class and returns to dark-on-light. */
-.nav-on-dark {
+/* The masthead is the old fixed nav, moved into the hero once the bar went
+   away: brand on the left, offer and anchors on the right. It sits across the
+   diagonal, so it reads through difference blending for the same reason as the
+   seam: near-white over the dark triangle, near-dark over the light sliver by
+   the top-right corner. A fixed color would vanish on one half or the other. */
+.hero-masthead {
   --color-ink: #f4f4f2;
-  --color-ink-muted: #9a9a97;
-  --color-ground: #0c0c0b;
-  --color-hairline: #2a2a28;
-  --color-hairline-strong: #3d3d3a;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-top: 1.25rem;
+  color: #f4f4f2;
+  mix-blend-mode: difference;
+}
+
+.hero-masthead-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: inherit;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.hero-masthead-mark {
+  flex: 0 0 auto;
+  width: auto;
+  height: 1.4em;
+}
+
+.hero-masthead-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.hero-masthead-offer {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.hero-masthead-link {
+  color: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: var(--tracking-label);
+  text-decoration: none;
+  text-transform: uppercase;
+  opacity: 0.65;
+  transition: opacity 150ms;
+}
+
+.hero-masthead-link:hover {
+  opacity: 1;
+}
+
+@media (max-width: 639px) {
+  .hero-masthead-offer,
+  .hero-masthead-link-wide {
+    display: none;
+  }
 }
 
 /* The dark half sets its own tokens, so every control inside it inverts on its
@@ -455,9 +530,10 @@ body {
 .product-hero-inner {
   position: relative;
   z-index: 1;
-  min-height: calc(100dvh - 6.5rem);
-  /* Reserved for the deck, which is positioned against the bottom edge rather
-     than laid out in the flow, so the copy can never end up underneath a card. */
+  min-height: 100dvh;
+  /* Reserved for the full deck, which is positioned against the bottom edge
+     rather than laid out in the flow, so the copy can never end up underneath
+     a card. */
   padding-bottom: calc(var(--agent-card-height) + 1.5rem);
 }
 
@@ -577,7 +653,7 @@ body {
 .agent-card-art {
   position: relative;
   flex: 1 1 auto;
-  min-height: 9rem;
+  min-height: 8rem;
   margin-top: 0.5rem;
   overflow: hidden;
   isolation: isolate;
@@ -1353,21 +1429,28 @@ body {
 
 @media (max-width: 767px) {
   .product-hero {
-    padding-top: 4.5rem;
-    --agent-card-height: 20rem;
-    min-height: calc(100dvh + var(--agent-card-height) * 0.6 + 1.5rem);
+    /* Same derivation as the wide layout, using the mobile card's own width
+       (17rem). The top block is shorter here (smaller title), so the constant
+       shrinks by the same amount to keep the artwork's wide proportion. */
+    --agent-card-height: calc(6.5rem + 0.62 * 17rem);
+  }
+  .hero-masthead {
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
   }
   /* A corner-to-corner diagonal leaves a wedge too thin to hold the copy at this
-     width, so the split becomes a flat band: dark on top, light below. */
+     width, so the split becomes a flat band: dark down to the card peek, light
+     below it. Both edges are tied to the peek size rather than a percentage,
+     so the seam always lands just above the cards on any height. */
   .hero-split-dark {
-    clip-path: inset(0 0 38% 0);
+    clip-path: inset(0 0 calc(var(--agent-card-height) * 0.4) 0);
   }
   .hero-seam {
     display: none;
   }
   .hero-seam-flat {
     position: absolute;
-    top: 62%;
+    top: calc(100% - (var(--agent-card-height) * 0.4));
     right: 0;
     left: 0;
     display: block;
@@ -1376,7 +1459,6 @@ body {
     opacity: 0.7;
   }
   .product-hero-inner {
-    min-height: calc(100dvh - 4.5rem);
     padding-right: 0;
     padding-left: 0;
     padding-bottom: calc(var(--agent-card-height) + 1rem);

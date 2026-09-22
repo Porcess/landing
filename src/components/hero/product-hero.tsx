@@ -1,12 +1,16 @@
 "use client";
 
 import { motion } from "motion/react";
+import Link from "next/link";
 
 import { AgentDeck } from "@/components/agents/agent-deck";
 import { EarlyAccessForm } from "@/components/early-access/early-access-form";
+import { SiteMark } from "@/components/hero/site-mark";
 import { TrustWord } from "@/components/hero/trust-word";
 import { Container } from "@/components/ui/section";
-import { siteCopy } from "@/content/copy";
+import { fillOffer, siteCopy } from "@/content/copy";
+import { track } from "@/lib/analytics";
+import { SECTION } from "@/lib/site";
 import type { Offer } from "@/lib/offer/format";
 
 /**
@@ -25,6 +29,16 @@ import type { Offer } from "@/lib/offer/format";
  * The seam is drawn as its own line rather than as a border: a border on a
  * clip-path is clipped away with the shape, and one rule that reads on both
  * halves needs difference blending, not a fixed color.
+ *
+ * The hero is taller than the viewport so the deck fits in full: the opening
+ * screen shows the top 40% of the cards, and scrolling reveals the rest. The
+ * split layer is exactly one viewport tall, so the seam runs corner to corner
+ * of the first screen instead of ending below the fold.
+ *
+ * The masthead is the old fixed nav, moved into the hero once the bar went
+ * away: logo and brand on the left, offer and anchors on the right. It sits
+ * across the diagonal, so it reads through difference blending for the same
+ * reason as the seam rather than through a fixed color.
  */
 export function ProductHero({ offer }: { offer: Offer }) {
   return (
@@ -54,6 +68,37 @@ export function ProductHero({ offer }: { offer: Offer }) {
       </div>
 
       <Container className="product-hero-inner">
+        <div className="hero-masthead">
+          <Link className="focus-ring hero-masthead-brand" href="/">
+            <SiteMark className="hero-masthead-mark" />
+            {siteCopy.brand.toUpperCase()}
+          </Link>
+
+          <nav aria-label={siteCopy.nav.label} className="hero-masthead-nav">
+            <span aria-hidden="true" className="hero-masthead-offer">
+              {fillOffer(siteCopy.offer.nav, offer.percent)}
+            </span>
+
+            <a
+              className="focus-ring hero-masthead-link hero-masthead-link-wide"
+              href={`#${SECTION.howItWorks}`}
+              onClick={() => track("nav_why_clicked")}
+            >
+              {siteCopy.nav.howItWorks}
+            </a>
+
+            <a
+              className="focus-ring hero-masthead-link"
+              href={`#${SECTION.earlyAccess}`}
+              onClick={() =>
+                track("early_access_cta_clicked", { source: "hero" })
+              }
+            >
+              {siteCopy.nav.cta}
+            </a>
+          </nav>
+        </div>
+
         <div className="hero-dark-zone">
           <p className="font-mono text-eyebrow tracking-eyebrow text-ink-muted uppercase">
             {siteCopy.hero.eyebrow}

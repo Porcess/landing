@@ -3,7 +3,6 @@ import { EarlyAccessSection } from "@/components/early-access/early-access-secti
 import { SiteFooter } from "@/components/footer/site-footer";
 import { ProductHero } from "@/components/hero/product-hero";
 import { HowItWorksSection } from "@/components/how-it-works/how-it-works-section";
-import { SiteNav } from "@/components/nav/site-nav";
 import { PricingSection } from "@/components/pricing/pricing-section";
 import { getActiveOffer } from "@/lib/offer/settings";
 import { SECTION } from "@/lib/site";
@@ -21,7 +20,6 @@ export default async function Page() {
 
   return (
     <>
-      <SiteNav offerPercent={offer.percent} />
       <main id={SECTION.main}>
         <ProductHero offer={offer} />
         <HowItWorksSection />

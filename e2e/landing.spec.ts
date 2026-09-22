@@ -16,6 +16,23 @@ test.describe("product landing", () => {
     await expect(page.locator("[data-word]")).toBeVisible();
     await expect(page.locator(".hero-seam-light")).toBeAttached();
     await expect(page.locator(".hero-seam-dark")).toBeAttached();
+    // The fixed nav moved into the hero: brand, offer, and anchors ride in the
+    // masthead, the site mark sits alongside the title, and no fixed header
+    // remains.
+    await expect(page.locator(".hero-masthead")).toBeVisible();
+    await expect(page.locator(".hero-masthead-brand")).toHaveText("PORCESS");
+    await expect(
+      page
+        .locator(".hero-masthead")
+        .getByRole("link", { name: "HOW IT WORKS" }),
+    ).toHaveAttribute("href", "#how-it-works");
+    await expect(
+      page
+        .locator(".hero-masthead")
+        .getByRole("link", { name: "EARLY ACCESS" }),
+    ).toHaveAttribute("href", "#early-access");
+    await expect(page.locator(".hero-masthead-mark")).toBeVisible();
+    await expect(page.locator("header")).toHaveCount(0);
     await expect(page.locator(".agent-card")).toHaveCount(4);
     await expect(page.getByText("Clips", { exact: true })).toBeVisible();
     await expect(page.getByText("Shorts", { exact: true })).toBeVisible();
@@ -56,6 +73,63 @@ test.describe("product landing", () => {
       }));
       expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.innerWidth);
       expect(geometry.heroBottom).toBeGreaterThan(geometry.innerHeight * 0.8);
+    }
+  });
+
+  test("fits the split to one viewport with a 40% card peek", async ({
+    page,
+  }) => {
+    for (const viewport of [
+      { width: 1920, height: 1080 },
+      { width: 1600, height: 900 },
+      { width: 1440, height: 900 },
+      { width: 1366, height: 768 },
+      { width: 1280, height: 1024 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto("/");
+      await expect(page.locator('[data-hero-ready="true"]')).toBeAttached();
+
+      const geometry = await page.evaluate(() => {
+        const hero = document
+          .querySelector(".product-hero")
+          ?.getBoundingClientRect();
+        const split = document
+          .querySelector(".hero-split")
+          ?.getBoundingClientRect();
+        const card = document
+          .querySelector(".agent-card")
+          ?.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const visible = card
+          ? Math.max(0, Math.min(card.bottom, vh) - Math.max(card.top, 0))
+          : 0;
+        return {
+          vh,
+          heroH: hero?.height ?? 0,
+          splitTop: split?.top ?? -1,
+          splitH: split?.height ?? 0,
+          peek: card ? (visible / card.height) * 100 : 0,
+          // The full card fits inside the hero: scrolling reveals it whole,
+          // nothing is clipped at the fold.
+          cardBottom: card?.bottom ?? 0,
+          heroBottom: hero?.bottom ?? 0,
+          scrollWidth: document.documentElement.scrollWidth,
+          innerWidth: window.innerWidth,
+        };
+      });
+
+      // The split is exactly the first viewport, so the seam runs corner to
+      // corner instead of ending below the fold, while the hero stays taller
+      // to hold the full cards below it.
+      expect(geometry.splitTop).toBeLessThanOrEqual(1);
+      expect(Math.abs(geometry.splitH - geometry.vh)).toBeLessThanOrEqual(2);
+      expect(geometry.heroH).toBeGreaterThan(geometry.vh);
+      // Roughly the top 40% of the cards shows at the fold.
+      expect(geometry.peek).toBeGreaterThan(30);
+      expect(geometry.peek).toBeLessThan(50);
+      expect(geometry.cardBottom).toBeLessThanOrEqual(geometry.heroBottom);
+      expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.innerWidth);
     }
   });
 
