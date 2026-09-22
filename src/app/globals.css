@@ -364,20 +364,12 @@ body {
   overflow: hidden;
   background: var(--color-ground);
   color: var(--color-ink);
-  /* Two sources, both derived from the card's width rather than the viewport
-     height, so every position agrees and the artwork keeps the wide proportion
-     it was drawn for.
-       - The art box is pinned to its own height (the 0.62 factor lands it near
-         1.45:1 at every width) and sits at the bottom of the card, so growing
-         the card can never stretch the animated compositions inside it.
-       - The card is a full quarter taller than the art needs. The extra height
-         becomes air between the name and the artwork, which restores the
-         portrait silhouette without touching the artwork itself. */
-  /* The card width tracks the viewport so the overlapping fan always spans the
+  /* The card width tracks the viewport so the overlapping row always spans the
      screen, edge to edge, on any monitor rather than stopping short on wide
-     displays. Everything else (art box, overlap) derives from it. */
-  --agent-card-width: clamp(16rem, 23vw, 40rem);
-  --agent-card-art-height: calc(1.31rem + 0.62 * var(--agent-card-width));
+     displays. The height tracks the viewport too, so the cards fill most of the
+     fold. The artwork is anchored to the card's own lower portion, so it scales
+     with the card instead of being pinned to a fixed size. */
+  --agent-card-width: clamp(15.5rem, 21.5vw, 37.5rem);
   --agent-card-height: clamp(30rem, 60vh, 46rem);
 }
 
@@ -568,17 +560,17 @@ body {
   /* The deck sits just above the bottom edge as full cards; the hero's own
      min-height is what puts only the top of them inside the first viewport. */
   bottom: 1.5rem;
-  left: 0;
+  left: -0.75rem;
   z-index: 2;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
   gap: 0;
   min-width: max-content;
-  /* Anchored to the left so the first card is almost flush with the screen edge
-     (only its bottom-left corner slips out under its slight right tilt), and the
-     deck runs off to the right so the last card reaches the opposite edge. */
-  padding: 0 1rem 0 0.75rem;
+  /* Anchored just past the left edge so the first card's bottom-left corner
+     slips out under its slight right tilt, while the rest of the row sits inside
+     the frame with room at the right. */
+  padding: 0;
   transform: none;
 }
 
@@ -601,42 +593,61 @@ body {
   color: #121413;
   box-shadow: 0 1.5rem 3rem rgb(17 19 17 / 0.12);
   transform-origin: 50% 100%;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
-/* A moderate overlap: each card after the first pulls left across its neighbour
-   by ~15% of its width, so the deck reads as loosely stacked cards rather than a
-   spaced row or a tight fan. The card width and this overlap are vw-based, so
-   five cards always run past the viewport and the outermost bleed to the screen
-   edges on any monitor. */
+/* A light overlap, in the reference's idiom: each card after the first pulls
+   left across its neighbour by ~8% of its width, so the deck reads as a row of
+   loosely stacked cards with the air still visible between them. The card width
+   and this overlap are vw-based, so five cards run to the screen edges on any
+   monitor. */
 .agent-card + .agent-card {
-  margin-left: calc(var(--agent-card-width) * -0.14);
+  margin-left: calc(var(--agent-card-width) * -0.08);
+}
+
+/* A small breather before the last card, so the deck ends with air rather than
+   one more overlap. */
+.agent-card:last-child {
+  margin-left: 0.75vw;
 }
 
 /* On hover a card lifts and straightens; bring it above its neighbours so the
-   raised card always sits on top. */
+   raised card always sits on top, ring it in its own colour, and drop a plain
+   black shadow beneath it. */
 .agent-card:hover {
   z-index: 4;
+  border-color: color-mix(in srgb, var(--card-accent) 55%, #ffffff);
+  box-shadow: 0 1.75rem 3.5rem rgb(17 19 17 / 0.3);
 }
 
 .agent-card-rose {
   background: #bd9ea9;
+  --card-accent: #bd9ea9;
 }
 
 .agent-card-teal {
   background: #236570;
+  --card-accent: #2f7d8a;
   color: #f5f6f0;
 }
 
 .agent-card-sage {
   background: #b4bda3;
+  --card-accent: #b4bda3;
 }
 
 .agent-card-coral {
   background: #df744c;
+  --card-accent: #df744c;
 }
 
 .agent-card-ink {
-  background: #0c0c0b;
+  /* A lifted black rather than the page's near-black, so the card reads as its
+     own surface against the dark half of the hero. */
+  background: #232320;
+  --card-accent: #5a5a54;
   color: #f4f4f2;
 }
 
@@ -646,7 +657,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 2.75rem 1.75rem 0.5rem;
+  /* Room above the name for the corner tag plus a tag's worth of air beneath it,
+     so the tag and the title never crowd each other. */
+  padding: 4.5rem 1.75rem 0.5rem;
 }
 
 /* The label is a pill, pinned into the card's top-right corner: a small chip that
@@ -696,16 +709,15 @@ body {
 }
 
 .agent-card-art {
-  position: relative;
-  /* Pinned height, kept in place directly under the name. A taller card grows
-     the space below it, never the artwork and never its position. */
-  flex: 0 0 auto;
-  height: var(--agent-card-art-height);
-  /* Inset from the sides so the artwork stays contained rather than bleeding to
-     the card edge. The gap matches the corner tag's own inset (right: 1.25rem),
-     so the artwork lines up with where the tag ends. */
-  margin-top: 0.5rem;
-  margin-inline: 1.25rem;
+  /* The artwork fills the card from below the name down to the bottom padding,
+     so it carries the lower two-thirds of the card the way an image does in the
+     reference. Device-like shapes are aspect-locked individually so filling the
+     tall box does not stretch them. */
+  position: absolute;
+  top: 33%;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  left: 1.25rem;
   overflow: hidden;
   isolation: isolate;
 }
@@ -967,10 +979,12 @@ body {
 
 .art-short {
   position: absolute;
-  top: 6%;
   right: 6%;
+  bottom: 6%;
   width: 32%;
-  height: 88%;
+  /* A device keeps its own shape: the phone is locked to its aspect ratio and
+     anchored to the bottom, so a taller art box moves it without stretching it. */
+  aspect-ratio: 0.5;
   overflow: hidden;
   border: 1px solid currentColor;
   border-radius: 0.8rem;
@@ -1375,9 +1389,6 @@ body {
   font-size: 0.9rem;
   line-height: 1.35;
 }
-.agent-details-section {
-  background: var(--color-ground-raised);
-}
 .agent-details-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1600,10 +1611,9 @@ body {
 
 @media (max-width: 767px) {
   .product-hero {
-    /* Same derivation as the wide layout, using the mobile card's own width
-       (17rem). The art box keeps its wide proportion; the card is a quarter
-       taller than the art needs so the extra height becomes air above it. */
-    --agent-card-art-height: calc(1.7rem + 0.62 * 17rem);
+    /* The mobile card is narrower and shorter, and the artwork fills its lower
+       portion the same way as the wide layout. */
+    --agent-card-width: 17rem;
     --agent-card-height: calc(8.125rem + 0.775 * 17rem);
   }
   .hero-masthead {
@@ -1654,7 +1664,8 @@ body {
     padding: 0 1.5rem;
     transform: none;
   }
-  .agent-card + .agent-card {
+  .agent-card + .agent-card,
+  .agent-card:last-child {
     margin-left: 0;
   }
   .agent-card {
@@ -1663,7 +1674,7 @@ body {
     border-radius: 1.5rem;
   }
   .agent-card-top {
-    padding: 2.25rem 1.25rem 0.4rem;
+    padding: 3.5rem 1.25rem 0.4rem;
   }
   .agent-card-label {
     top: 1rem;
@@ -1671,7 +1682,10 @@ body {
     font-size: 0.5625rem;
   }
   .agent-card-art {
-    margin-inline: 1rem;
+    top: 36%;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
   }
   .agent-card h2 {
     font-size: 1.6rem;

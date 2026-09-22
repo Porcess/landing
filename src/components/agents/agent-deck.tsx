@@ -6,7 +6,7 @@ import { siteCopy } from "@/content/copy";
 
 import { AgentArt } from "./agent-art";
 
-const rotations = [3, -4, 3.5, 4, -3.5];
+const rotations = [3, -2.5, 3.5, 4, -3.5];
 const colors = [
   "agent-card-rose",
   "agent-card-teal",
@@ -48,7 +48,18 @@ export function AgentDeck() {
             duration: 0.85,
             ease: [0.16, 1, 0.3, 1],
           }}
-          whileHover={reduced ? undefined : { y: -16, rotate: 0, scale: 1.025 }}
+          whileHover={
+            reduced
+              ? undefined
+              : {
+                  y: -16,
+                  rotate: 0,
+                  scale: 1.025,
+                  /* The staggered entrance delay must not carry into hover: the
+                     card lifts the moment the pointer is over it. */
+                  transition: { delay: 0, duration: 0.25 },
+                }
+          }
         >
           <div className="agent-card-top">
             <span className="agent-card-label">{agent.label}</span>
