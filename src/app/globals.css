@@ -357,10 +357,10 @@ body {
 
 .product-hero {
   position: relative;
-  /* Taller than the viewport so the deck fits in full: the top 40% of the cards
-     is inside the first screen and scrolling reveals the rest. Nothing is
-     clipped. */
-  min-height: calc(100dvh + var(--agent-card-height) * 0.6 + 1.5rem);
+  /* Taller than the viewport so the deck fits in full: the top portion of the
+     cards is inside the first screen and scrolling reveals the rest. Nothing is
+     clipped. The 0.35 factor leaves ~65% of each card above the fold. */
+  min-height: calc(100dvh + var(--agent-card-height) * 0.35 + 1.5rem);
   overflow: hidden;
   background: var(--color-ground);
   color: var(--color-ink);
@@ -373,8 +373,12 @@ body {
        - The card is a full quarter taller than the art needs. The extra height
          becomes air between the name and the artwork, which restores the
          portrait silhouette without touching the artwork itself. */
-  --agent-card-art-height: calc(1.31rem + 0.62 * clamp(20rem, 28vw, 25rem));
-  --agent-card-height: clamp(28rem, 50vh, 40rem);
+  /* The card width tracks the viewport so the overlapping fan always spans the
+     screen, edge to edge, on any monitor rather than stopping short on wide
+     displays. Everything else (art box, overlap) derives from it. */
+  --agent-card-width: clamp(16rem, 23vw, 40rem);
+  --agent-card-art-height: calc(1.31rem + 0.62 * var(--agent-card-width));
+  --agent-card-height: clamp(30rem, 60vh, 46rem);
 }
 
 /* The diagonal. The dark half is the top-left triangle; the page behind it is
@@ -564,15 +568,18 @@ body {
   /* The deck sits just above the bottom edge as full cards; the hero's own
      min-height is what puts only the top of them inside the first viewport. */
   bottom: 1.5rem;
-  left: 50%;
+  left: 0;
   z-index: 2;
   display: flex;
   align-items: flex-end;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0;
   min-width: max-content;
-  padding: 0 1rem;
-  transform: translateX(-50%);
+  /* Anchored to the left so the first card is almost flush with the screen edge
+     (only its bottom-left corner slips out under its slight right tilt), and the
+     deck runs off to the right so the last card reaches the opposite edge. */
+  padding: 0 1rem 0 0.75rem;
+  transform: none;
 }
 
 /* The agent cards.
@@ -584,7 +591,7 @@ body {
 .agent-card {
   position: relative;
   display: flex;
-  width: clamp(20rem, 28vw, 25rem);
+  width: var(--agent-card-width);
   height: var(--agent-card-height);
   flex: 0 0 auto;
   flex-direction: column;
@@ -596,19 +603,17 @@ body {
   transform-origin: 50% 100%;
 }
 
-/* The cards overlap into a fan rather than sitting in a row: each one after the
-   first pulls left across its neighbour, and the deck rotates them around their
-   bottom edge (transform-origin: 50% 100%) so the tops splay apart while the
-   bottoms tuck together. The overlap lands at the bottoms, where only artwork
-   meets, so every card's corner tag, name, purpose line, and studio chip stay
-   clear of the card stacked on top of it. Later cards paint over earlier ones,
-   so the deck reads left-to-right like a dealt hand. */
+/* A moderate overlap: each card after the first pulls left across its neighbour
+   by ~15% of its width, so the deck reads as loosely stacked cards rather than a
+   spaced row or a tight fan. The card width and this overlap are vw-based, so
+   five cards always run past the viewport and the outermost bleed to the screen
+   edges on any monitor. */
 .agent-card + .agent-card {
-  margin-left: calc(clamp(20rem, 28vw, 25rem) * -0.33);
+  margin-left: calc(var(--agent-card-width) * -0.14);
 }
 
 /* On hover a card lifts and straightens; bring it above its neighbours so the
-   raised card is never tucked under the one dealt after it. */
+   raised card always sits on top. */
 .agent-card:hover {
   z-index: 4;
 }
@@ -1610,14 +1615,14 @@ body {
      below it. Both edges are tied to the peek size rather than a percentage,
      so the seam always lands just above the cards on any height. */
   .hero-split-dark {
-    clip-path: inset(0 0 calc(var(--agent-card-height) * 0.4) 0);
+    clip-path: inset(0 0 calc(var(--agent-card-height) * 0.65) 0);
   }
   .hero-seam {
     display: none;
   }
   .hero-seam-flat {
     position: absolute;
-    top: calc(100% - (var(--agent-card-height) * 0.4));
+    top: calc(100% - (var(--agent-card-height) * 0.65));
     right: 0;
     left: 0;
     display: block;

@@ -6,7 +6,7 @@ import { siteCopy } from "@/content/copy";
 
 import { AgentArt } from "./agent-art";
 
-const rotations = [-6, -3, 0, 3, 6];
+const rotations = [3, -4, 3.5, 4, -3.5];
 const colors = [
   "agent-card-rose",
   "agent-card-teal",

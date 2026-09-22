@@ -77,7 +77,7 @@ test.describe("product landing", () => {
     }
   });
 
-  test("fits the split to one viewport with a 40% card peek", async ({
+  test("fits the split to one viewport with a two-thirds card peek", async ({
     page,
   }) => {
     for (const viewport of [
@@ -126,9 +126,9 @@ test.describe("product landing", () => {
       expect(geometry.splitTop).toBeLessThanOrEqual(1);
       expect(Math.abs(geometry.splitH - geometry.vh)).toBeLessThanOrEqual(2);
       expect(geometry.heroH).toBeGreaterThan(geometry.vh);
-      // Roughly the top 40% of the cards shows at the fold.
-      expect(geometry.peek).toBeGreaterThan(30);
-      expect(geometry.peek).toBeLessThan(50);
+      // Roughly the top two-thirds of the cards shows at the fold.
+      expect(geometry.peek).toBeGreaterThan(55);
+      expect(geometry.peek).toBeLessThan(75);
       expect(geometry.cardBottom).toBeLessThanOrEqual(geometry.heroBottom);
       expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.innerWidth);
     }
