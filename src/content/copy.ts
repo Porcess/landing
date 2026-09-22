@@ -23,8 +23,8 @@ export const siteCopy = {
      * what the agents actually do. Both are stated once, in plain text.
      */
     headline: "Tailored Agents",
-    headlineTail: "For each of your workflows",
-    hook: "Focused AI agents for content, marketing, search, testing, and your next release.",
+    headlineTail: "For Every Workflow You Have",
+    hook: "Focused AI agents for content, marketing, search, testing, and more.",
   },
 
   agents: [
